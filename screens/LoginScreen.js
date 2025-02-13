@@ -2,28 +2,27 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
+import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-
+  const navigation = useNavigation();
 
   const handleLogin = () => {
-    console.log("Email:", email);  // Debug: Log the email
-    console.log("Password:", password);  // Debug: Log the password
+    console.log("Email:", email);
+    console.log("Password:", password);
 
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredentials) => {
             console.log('Logged in with:', userCredentials.user.email);
+            navigation.navigate('Dashboard'); // Navigate Dashboard if and only if successful login
         })
         .catch((error) => {
             console.error('Login Error:', error);
-            alert(`Login Error: ${error.code} - ${error.message}`);
+            Alert.alert(`Login Error: ${error.code} - ${error.message}`);
         });
-};
-
-  
+  };
 
   return (
     <View style={styles.container}>
@@ -60,3 +59,4 @@ const styles = StyleSheet.create({
     padding: 10,
   }
 });
+
