@@ -1,46 +1,21 @@
-// import React from 'react';
-// import { StyleSheet, View, Text, StatusBar } from 'react-native';
-// import { NavigationContainer } from '@react-navigation/native';
-// import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-// // Import the LoginScreen
-// import LoginScreen from './screens/LoginScreen';
-
-// // Import the auth object from Firebase configuration
-// import { auth } from './services/firebaseConfig';
-
-// const Stack = createNativeStackNavigator();
-
-// export default function App() {
-//   return (
-//     <NavigationContainer>
-//       <Stack.Navigator initialRouteName="Login">
-//         <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Sign In' }} />
-//       </Stack.Navigator>
-//       <StatusBar style="auto" />
-//     </NavigationContainer>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-// });
-
-// we are adding the redirection to dashboard after successfull login
-
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import AppNavigator from './navigation/AppNavigator';  // Adjust the path as necessary
+import AppNavigator from './navigation/AppNavigator';
+import SplashScreen from './screens/SplashScreen'; // Import the Splash Screen
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <NavigationContainer>
-      <AppNavigator />
+      {isLoading ? (
+        <SplashScreen onAnimationFinish={() => setIsLoading(false)} />
+      ) : (
+        <AppNavigator />
+      )}
     </NavigationContainer>
   );
 }
+
+
+

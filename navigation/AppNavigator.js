@@ -2,6 +2,8 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -23,10 +25,16 @@ const AppNavigator = () => {
           headerBackVisible: false,
          }}
       />
+      <Stack.Screen 
+        name="ResetPassword" 
+        component={ResetPasswordScreen} 
+        options={{
+          title: 'Reset Password'
+        }}
+      />
     </Stack.Navigator>
   );
 };
 
 export default AppNavigator;
-
 

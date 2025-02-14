@@ -16,13 +16,30 @@ export default function LoginScreen() {
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredentials) => {
             console.log('Logged in with:', userCredentials.user.email);
-            navigation.navigate('Dashboard'); // Navigate Dashboard if and only if successful login
+            navigation.navigate('Dashboard'); 
         })
         .catch((error) => {
-            console.error('Login Error:', error);
-            Alert.alert(`Login Error: ${error.code} - ${error.message}`);
+          console.error('Login Error:', error);
+          let message = '';
+          switch (error.code) {
+            case 'auth/user-not-found':
+              message = 'No user account found with that email. Please check your email or register.';
+              break;
+            case 'auth/wrong-password':
+            case 'auth/invalid-email':
+              message = 'Invalid Email or password. Please try again or reset your password if you forgot it.';
+              break;
+            default:
+              message = `Login failed: ${error.message}`;
+          }
+          Alert.alert('Login Error', message);
         });
-  };
+    };
+  //       .catch((error) => {
+  //           console.error('Login Error:', error);
+  //           Alert.alert(`Login Error: ${error.code} - ${error.message}`);
+  //       });
+  // };
 
   return (
     <View style={styles.container}>
@@ -42,6 +59,7 @@ export default function LoginScreen() {
         autoCapitalize="none"
       />
       <Button title="Login" onPress={handleLogin} />
+      <Button title="Forgot Password?" onPress={() => navigation.navigate('ResetPassword')}/>
     </View>
   );
 }
@@ -59,4 +77,3 @@ const styles = StyleSheet.create({
     padding: 10,
   }
 });
-
