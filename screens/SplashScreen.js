@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import LottieView from 'lottie-react-native';
-import animation from '../assets/animation.json'; // Use local JSON
+import animation from '../assets/animation.json'; 
 
 const SplashScreen = ({ onAnimationFinish }) => {
   return (
@@ -10,7 +10,7 @@ const SplashScreen = ({ onAnimationFinish }) => {
         source={animation}
         autoPlay
         loop={false}
-        onAnimationFinish={onAnimationFinish} // Wait until animation completes
+        onAnimationFinish={onAnimationFinish} 
         style={styles.animation}
       />
     </View>
@@ -25,8 +25,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   animation: {
-    width: 400, // Increase size
-    height: 400, // Increase size
+    width: 400, 
+    height: 400, 
   },
 });
 
