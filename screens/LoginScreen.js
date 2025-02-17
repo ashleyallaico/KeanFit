@@ -2,75 +2,29 @@ import React, { useState } from 'react';
 import {
   View,
   TextInput,
-<<<<<<< Updated upstream
-  TouchableOpacity,
-=======
->>>>>>> Stashed changes
   Text,
   Image,
   StyleSheet,
   Alert,
-<<<<<<< Updated upstream
-=======
   TouchableWithoutFeedback,
   Keyboard,
   TouchableOpacity,
->>>>>>> Stashed changes
 } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
-<<<<<<< Updated upstream
-=======
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import Icon from 'react-native-vector-icons/FontAwesome';
->>>>>>> Stashed changes
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const navigation = useNavigation();
 
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
-<<<<<<< Updated upstream
-        console.log('Logged in with:', userCredentials.user.email);
-        navigation.navigate('Dashboard');
-      })
-      .catch((error) => {
-        console.error('Login Error:', error);
-        Alert.alert(`Login Error: ${error.code} - ${error.message}`);
-      });
-  };
-
-  return (
-    <View style={styles.container}>
-      <Image source={require('../assets/KEANFIT.png')} style={styles.logo} />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        placeholderTextColor="#aaa"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        autoCapitalize="none"
-        placeholderTextColor="#aaa"
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-    </View>
-=======
         const uid = userCredentials.user.uid;
         const db = getDatabase();
         const accountStatusRef = ref(db, `AccountDissable/${uid}`);
@@ -187,7 +141,6 @@ export default function LoginScreen() {
         </View>
       </View>
     </TouchableWithoutFeedback>
->>>>>>> Stashed changes
   );
 }
 
@@ -196,48 +149,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-<<<<<<< Updated upstream
-    backgroundColor: '#f4f4f4',
-=======
->>>>>>> Stashed changes
     padding: 20,
     backgroundColor: '#f9f9f9',
   },
   logo: {
     width: 150,
     height: 150,
-<<<<<<< Updated upstream
-    marginBottom: 20,
-=======
     marginBottom: 30,
     resizeMode: 'contain',
->>>>>>> Stashed changes
   },
   input: {
     width: '100%',
     height: 50,
     backgroundColor: '#fff',
-<<<<<<< Updated upstream
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  button: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#007bff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-=======
     borderRadius: 10,
     paddingLeft: 15,
     borderWidth: 1,
@@ -262,7 +186,7 @@ const styles = StyleSheet.create({
   loginButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#09355c',
+    backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
@@ -280,8 +204,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   linkText: {
-    color: '#09355c',
+    color: '#007AFF',
     fontSize: 16,
->>>>>>> Stashed changes
   },
 });
