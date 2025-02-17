@@ -17,6 +17,9 @@ export default function ResetPasswordScreen() {
         let message = '';
         if (error.code === 'auth/user-not-found') {
           message = 'No account found with this email. Please check the email entered or create a new account.';
+        }
+        if (error.code === 'auth/missing-email') {
+          message = 'Please Enter the email registered with your account. ';
         } else {
           message = `Error: ${error.message}`;
         }
