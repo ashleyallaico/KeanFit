@@ -3,14 +3,13 @@ import {
   View,
   TextInput,
   Text,
-  Button,
+  Image,
   StyleSheet,
   Alert,
   TouchableWithoutFeedback,
   Keyboard,
   TouchableOpacity,
 } from 'react-native';
-
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
@@ -22,8 +21,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigation = useNavigation();
-
-
 
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
@@ -58,6 +55,20 @@ export default function LoginScreen() {
       .catch((error) => handleAuthError(error));
   };
 
+  const reactivateAccount = (uid) => {
+    const db = getDatabase();
+    set(ref(db, `AccountDissable/${uid}`), false)
+      .then(() => {
+        Alert.alert(
+          'Account Reactivated',
+          'Your account has been reactivated.'
+        );
+        navigation.navigate('Dashboard');
+      })
+      .catch((error) =>
+        Alert.alert('Account Reactivation Failed', error.message)
+      );
+  };
 
   const handleAuthError = (error) => {
     let message = '';
@@ -74,21 +85,6 @@ export default function LoginScreen() {
     }
     Alert.alert('Login Error', message);
   };
-
-  const reactivateAccount = (uid) => {
-    const db = getDatabase();
-    const accountStatusRef = ref(db, `AccountDissable/${uid}`);
-    set(accountStatusRef, false)
-      .then(() => {
-        Alert.alert("Account Reactivated", "Your account has been reactivated.");
-        navigation.navigate('Dashboard');
-      })
-      .catch(error => {
-        Alert.alert("Account Reactivation Failed", error.message);
-      });
-  };
-
-
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -156,29 +152,6 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f9f9f9',
   },
-
-  inputEmail: {
-    height: 40,
-    marginBottom: 12,
-    borderWidth: 1,
-    padding: 10,
-    width: '100%',
-  },
-  inputPasswordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  inputPassword: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    padding: 10,
-  },
-  icon: {
-    padding: 10,
-  },
-
   logo: {
     width: 150,
     height: 150,
@@ -213,7 +186,7 @@ const styles = StyleSheet.create({
   loginButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#09355c',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
@@ -231,7 +204,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   linkText: {
-    color: '#007AFF',
+    color: '#09355c',
     fontSize: 16,
   },
 });
