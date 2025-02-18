@@ -7,7 +7,6 @@ import SettingsScreen from '../screens/SettingsScreen'; // Import the SettingsSc
 import UpdatePasswordScreen from '../screens/UpdatePasswordScreen'; // Import the SettingsScreen
 
 
-
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -18,22 +17,22 @@ const AppNavigator = () => {
         component={LoginScreen}
         options={{
           title: 'Sign In',
-          headerLeft: () => null
+
+          headerLeft: () => null,
+
         }}
       />
       <Stack.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{
-          title: 'Dashboard',
-          headerBackVisible: false,
-        }}
+
+        options={{ title: 'Dashboard', headerBackVisible: false }}
       />
       <Stack.Screen
         name="ResetPassword"
         component={ResetPasswordScreen}
         options={{
-          title: 'Reset Password'
+          title: 'Reset Password',
         }}
       />
       <Stack.Screen
@@ -41,11 +40,12 @@ const AppNavigator = () => {
         component={SettingsScreen}
         options={{
           title: 'Settings',
+
           headerBackVisible: false,
-        }
-        }
+        }}
       />
       <Stack.Screen
+
         name="UpdatePassword"
         component={UpdatePasswordScreen}
         options={{ title: 'Update Password' }}

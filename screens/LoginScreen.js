@@ -1,7 +1,4 @@
-
-
 import React, { useState } from 'react';
-
 import {
   View,
   TextInput,
@@ -12,7 +9,6 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -32,41 +28,51 @@ export default function LoginScreen() {
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
-        const uid = userCredentials.user.uid; // Get user ID
+        const uid = userCredentials.user.uid;
         const db = getDatabase();
         const accountStatusRef = ref(db, `AccountDissable/${uid}`);
 
-        onValue(accountStatusRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const isDisabled = snapshot.val();
-            if (!isDisabled) {
-              navigation.navigate('Dashboard');
-            } else {
-              // Ask user if they want to reactivate their account
-              Alert.alert(
-                "Reactivate Account",
-                "Your account is currently disabled. Do you want to reactivate your account?",
-                [
-                  {
-                    text: "Yes",
-                    onPress: () => reactivateAccount(uid)
-                  },
-                  {
-                    text: "No",
-                    style: "cancel"
-                  }
-                ],
-                { cancelable: false }
-              );
+        onValue(
+          accountStatusRef,
+          (snapshot) => {
+            if (snapshot.exists()) {
+              const isDisabled = snapshot.val();
+              if (!isDisabled) {
+                navigation.navigate('Dashboard');
+              } else {
+                Alert.alert(
+                  'Reactivate Account',
+                  'Your account is currently disabled. Do you want to reactivate your account?',
+                  [
+                    { text: 'Yes', onPress: () => reactivateAccount(uid) },
+                    { text: 'No', style: 'cancel' },
+                  ],
+                  { cancelable: false }
+                );
+              }
             }
-          }
-        }, {
-          onlyOnce: true
-        });
+          },
+          { onlyOnce: true }
+        );
       })
-      .catch((error) => {
-        handleAuthError(error);
-      });
+      .catch((error) => handleAuthError(error));
+  };
+
+
+  const handleAuthError = (error) => {
+    let message = '';
+    switch (error.code) {
+      case 'auth/user-not-found':
+        message = 'No account found with that email.';
+        break;
+      case 'auth/wrong-password':
+      case 'auth/invalid-email':
+        message = 'Invalid email or password. Please try again.';
+        break;
+      default:
+        message = `Login failed: ${error.message}`;
+    }
+    Alert.alert('Login Error', message);
   };
 
   const reactivateAccount = (uid) => {
@@ -82,58 +88,63 @@ export default function LoginScreen() {
       });
   };
 
-  const handleAuthError = (error) => {
-    let message = '';
-    switch (error.code) {
-      case 'auth/user-not-found':
-        message = 'No user account found with that email. Please check your email or register.';
-        break;
-      case 'auth/wrong-password':
-      case 'auth/invalid-email':
-        message = 'Invalid Email or password. Please try again or reset your password if you forgot it.';
-        break;
-      default:
-        message = `Login failed: ${error.message}`;
-    }
-    Alert.alert('Login Error', message);
-  };
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
+        {/* KEANFIT Logo */}
+        <Image source={require('../assets/KEANFIT.png')} style={styles.logo} />
+
+        {/* Email Input */}
         <TextInput
-          style={styles.inputEmail}
+          style={styles.input}
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
         />
-        <View style={styles.inputPasswordContainer}>
+
+        {/* Password Input with Toggle Icon */}
+        <View style={styles.passwordContainer}>
           <TextInput
-            style={styles.inputPassword}
+            style={styles.passwordInput}
             placeholder="Password"
             secureTextEntry={!passwordVisible}
             value={password}
             onChangeText={setPassword}
             autoCapitalize="none"
           />
-          <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={styles.icon}>
-            <Icon name={passwordVisible ? 'eye-slash' : 'eye'} size={20} color="grey" />
+          <TouchableOpacity
+            onPress={() => setPasswordVisible(!passwordVisible)}
+          >
+            <Icon
+              name={passwordVisible ? 'eye-slash' : 'eye'}
+              size={20}
+              color="gray"
+            />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        {/* Login Button */}
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('ResetPassword')}>
-          <Text style={styles.buttonText}>Forgot Password?</Text>
-        </TouchableOpacity>
-
+        {/* Forgot Password & Sign Up Links */}
+        <View style={styles.footerLinks}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ResetPassword')}
+          >
+            <Text style={styles.linkText}>Forgot Password?</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.linkText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </TouchableWithoutFeedback >
-
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -142,8 +153,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f4f4f4',
     padding: 20,
+    backgroundColor: '#f9f9f9',
   },
 
   inputEmail: {
@@ -171,31 +182,56 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 150,
-    marginBottom: 20,
+    marginBottom: 30,
+    resizeMode: 'contain',
   },
   input: {
     width: '100%',
     height: 50,
     backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 12,
+    borderRadius: 10,
+    paddingLeft: 15,
     borderWidth: 1,
     borderColor: '#ddd',
+    marginBottom: 15,
   },
-  button: {
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
     height: 50,
-    backgroundColor: '#007bff',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingLeft: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 20,
+  },
+  passwordInput: {
+    flex: 1,
+  },
+  loginButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
-    marginTop: 10,
+    borderRadius: 10,
+    marginBottom: 20,
   },
-  buttonText: {
+  loginButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
-
+  footerLinks: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 10,
+  },
+  linkText: {
+    color: '#007AFF',
+    fontSize: 16,
+  },
 });
