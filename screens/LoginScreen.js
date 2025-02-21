@@ -26,34 +26,49 @@ export default function LoginScreen() {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
         const uid = userCredentials.user.uid;
-        const db = getDatabase();
-        const accountStatusRef = ref(db, `AccountDissable/${uid}`);
-
-        onValue(
-          accountStatusRef,
-          (snapshot) => {
-            if (snapshot.exists()) {
-              const isDisabled = snapshot.val();
-              if (!isDisabled) {
-                navigation.navigate('Dashboard');
-              } else {
-                Alert.alert(
-                  'Reactivate Account',
-                  'Your account is currently disabled. Do you want to reactivate your account?',
-                  [
-                    { text: 'Yes', onPress: () => reactivateAccount(uid) },
-                    { text: 'No', style: 'cancel' },
-                  ],
-                  { cancelable: false }
-                );
-              }
-            }
-          },
-          { onlyOnce: true }
-        );
+        checkAccountStatus(uid);
       })
       .catch((error) => handleAuthError(error));
   };
+
+const checkAccountStatus = (uid) => {
+  const db = getDatabase();
+  const accountStatusRef = ref(db, `AccountDissable/${uid}`);
+
+  onValue(
+    accountStatusRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        const isDisabled = snapshot.val();
+        if (!isDisabled) {
+          navigation.navigate('Dashboard');
+        } else {
+          Alert.alert(
+            'Reactivate Account',
+            'Your account is currently disabled. Do you want to reactivate your account?',
+            [
+              { text: 'Yes', onPress: () => reactivateAccount(uid) },
+              { text: 'No', style: 'cancel' },
+            ],
+            { cancelable: false }
+          );
+        }
+      } else {
+        // Node doesn't exist, create it and set to false
+        set(accountStatusRef, false)
+          .then(() => {
+            navigation.navigate('Dashboard');
+          })
+          .catch((error) => {
+            Alert.alert('Error', 'Failed to initialize account status.');
+            console.error(error);
+          });
+      }
+    },
+    { onlyOnce: true }
+  );
+};
+
 
   const reactivateAccount = (uid) => {
     const db = getDatabase();

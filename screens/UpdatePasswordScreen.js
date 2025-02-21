@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Keyboard, TouchableWithoutFeedback, TouchableOpacity } from 'react-native';
-import { auth } from '../services/firebaseConfig'; 
-import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth'; 
-import Icon from 'react-native-vector-icons/FontAwesome'; 
+import { auth } from '../services/firebaseConfig';
+import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { useNavigation } from '@react-navigation/native';
 
 const UpdatePasswordScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -14,24 +15,84 @@ const UpdatePasswordScreen = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
+    const navigation = useNavigation();
+  
+
+  // const handleUpdatePassword = async () => {
+  //   if (newPassword !== confirmNewPassword) {
+  //     Alert.alert('Error', 'New passwords do not match.');
+  //     return;
+  //   }
+  //   try {
+  //     const user = auth.currentUser;
+  //     const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+  //     // Re-authenticate user
+  //     await reauthenticateWithCredential(user, credential);
+  //     // Update password
+  //     await updatePassword(user, newPassword);
+  //     Alert.alert('Success', 'Password updated successfully!');
+  //   } catch (error) {
+  //     Alert.alert('Error', error.message);
+  //   }
+  // };
+
+  const isStrongPassword = (password) => {
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    return strongPasswordRegex.test(password);
+  };
+
+
   const handleUpdatePassword = async () => {
     if (newPassword !== confirmNewPassword) {
       Alert.alert('Error', 'New passwords do not match.');
       return;
     }
+  
+    if (!isStrongPassword(newPassword)) {
+      Alert.alert(
+        'Weak Password',
+        'Password must be at least 8 characters long and include uppercase, lowercase, numbers, and special characters.'
+      );
+      return;
+    }
+  
     try {
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(user.email, currentPassword);
-
+  
       // Re-authenticate user
       await reauthenticateWithCredential(user, credential);
       // Update password
       await updatePassword(user, newPassword);
-      Alert.alert('Success', 'Password updated successfully!');
+  
+      // Navigate after alert "OK"
+      Alert.alert(
+        'Success', 
+        'Password updated successfully!',
+        [
+          { 
+            text: 'OK', 
+            onPress: () => navigation.navigate('Settings')
+          },
+        ],
+        { cancelable: false }
+      );
+  
+    
     } catch (error) {
-      Alert.alert('Error', error.message);
+      // Handle common errors gracefully
+      if (error.code === 'auth/wrong-password') {
+        Alert.alert('Error', 'Current password is incorrect.');
+      } else if (error.code === 'auth/weak-password') {
+        Alert.alert('Error', 'New password is too weak.');
+      } else {
+        Alert.alert('Error', error.message);
+      }
     }
   };
+
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
