@@ -1,11 +1,23 @@
-
-
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Keyboard, TouchableWithoutFeedback, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+  TouchableOpacity,
+} from 'react-native';
 import { auth } from '../services/firebaseConfig';
-import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from 'firebase/auth';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import {
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  updatePassword,
+} from 'firebase/auth';
+import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import NavBar from '../components/NavBar';
 
 const UpdatePasswordScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -92,48 +104,88 @@ const UpdatePasswordScreen = () => {
     }
   };
 
-
+  const PasswordInput = ({
+    placeholder,
+    value,
+    setValue,
+    showPassword,
+    setShowPassword,
+  }) => (
+    <View style={styles.inputWrapper}>
+      <View style={styles.inputContainer}>
+        <FontAwesome
+          name="lock"
+          size={20}
+          color="#09355c"
+          style={styles.inputIcon}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder={placeholder}
+          secureTextEntry={!showPassword}
+          value={value}
+          onChangeText={setValue}
+          placeholderTextColor="#666"
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.eyeIcon}
+        >
+          <FontAwesome
+            name={showPassword ? 'eye-slash' : 'eye'}
+            size={20}
+            color="#09355c"
+          />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Current Password"
-            secureTextEntry={!showCurrentPassword}
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-          />
-          <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
-            <Icon name={showCurrentPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
-          </TouchableOpacity>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Update Password</Text>
+          <Text style={styles.headerSubtitle}>Keep your account secure</Text>
         </View>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="New Password"
-            secureTextEntry={!showNewPassword}
-            value={newPassword}
-            onChangeText={setNewPassword}
-          />
-          <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
-            <Icon name={showNewPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
-          </TouchableOpacity>
+
+        <View style={styles.content}>
+          <View style={styles.card}>
+            <PasswordInput
+              placeholder="Current Password"
+              value={currentPassword}
+              setValue={setCurrentPassword}
+              showPassword={showCurrentPassword}
+              setShowPassword={setShowCurrentPassword}
+            />
+
+            <PasswordInput
+              placeholder="New Password"
+              value={newPassword}
+              setValue={setNewPassword}
+              showPassword={showNewPassword}
+              setShowPassword={setShowNewPassword}
+            />
+
+            <PasswordInput
+              placeholder="Confirm New Password"
+              value={confirmNewPassword}
+              setValue={setConfirmNewPassword}
+              showPassword={showConfirmNewPassword}
+              setShowPassword={setShowConfirmNewPassword}
+            />
+
+            <TouchableOpacity
+              style={styles.updateButton}
+              onPress={handleUpdatePassword}
+            >
+              <FontAwesome name="check" size={20} color="#fff" />
+              <Text style={styles.updateButtonText}>Update Password</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm New Password"
-            secureTextEntry={!showConfirmNewPassword}
-            value={confirmNewPassword}
-            onChangeText={setConfirmNewPassword}
-          />
-          <TouchableOpacity onPress={() => setShowConfirmNewPassword(!showConfirmNewPassword)}>
-            <Icon name={showConfirmNewPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
-          </TouchableOpacity>
-        </View>
-        <Button title="Update Password" onPress={handleUpdatePassword} />
+
+        <NavBar />
       </View>
     </TouchableWithoutFeedback>
   );
@@ -142,20 +194,84 @@ const UpdatePasswordScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f9f9f9',
+  },
+  header: {
+    backgroundColor: '#09355c',
     padding: 20,
-    justifyContent: 'center',
+    paddingTop: 25,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 5,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#fff',
+    opacity: 0.8,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  inputWrapper: {
+    marginBottom: 20,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e1e1e1',
+    height: 50,
+  },
+  inputIcon: {
+    padding: 10,
   },
   input: {
     flex: 1,
-    height: 40,
-    borderWidth: 1,
+    height: '100%',
     padding: 10,
-  }
+    color: '#333',
+    fontSize: 16,
+  },
+  eyeIcon: {
+    padding: 10,
+  },
+  updateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#09355c',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  updateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
 });
 
 export default UpdatePasswordScreen;

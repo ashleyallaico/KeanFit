@@ -14,13 +14,17 @@ import { getDatabase, ref, set } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
 
 const SettingsScreen = () => {
-  const [isEnabledNotifications, setIsEnabledNotifications] = useState(false);
-  const [isEnabledDarkMode, setIsEnabledDarkMode] = useState(false);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const navigation = useNavigation();
 
-  const toggleSwitchNotifications = () =>
-    setIsEnabledNotifications(!isEnabledNotifications);
-  const toggleSwitchDarkMode = () => setIsEnabledDarkMode(!isEnabledDarkMode);
+  const handleDarkModeToggle = () => {
+    setDarkModeEnabled((prevState) => !prevState);
+  };
+
+  const handleNotificationsToggle = () => {
+    setNotificationsEnabled((prevState) => !prevState);
+  };
 
   const disableAccount = () => {
     Alert.alert(
@@ -89,19 +93,19 @@ const SettingsScreen = () => {
             <SettingItem icon="bell" title="Enable Notifications">
               <Switch
                 trackColor={{ false: '#767577', true: '#09355c' }}
-                thumbColor={isEnabledNotifications ? '#fff' : '#f4f3f4'}
+                thumbColor={notificationsEnabled ? '#fff' : '#f4f3f4'}
                 ios_backgroundColor="#3e3e3e"
-                onValueChange={toggleSwitchNotifications}
-                value={isEnabledNotifications}
+                onValueChange={handleNotificationsToggle}
+                value={notificationsEnabled}
               />
             </SettingItem>
             <SettingItem icon="moon-o" title="Enable Dark Mode">
               <Switch
                 trackColor={{ false: '#767577', true: '#09355c' }}
-                thumbColor={isEnabledDarkMode ? '#fff' : '#f4f3f4'}
+                thumbColor={darkModeEnabled ? '#fff' : '#f4f3f4'}
                 ios_backgroundColor="#3e3e3e"
-                onValueChange={toggleSwitchDarkMode}
-                value={isEnabledDarkMode}
+                onValueChange={handleDarkModeToggle}
+                value={darkModeEnabled}
               />
             </SettingItem>
           </View>
