@@ -6,7 +6,6 @@ import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import SettingsScreen from '../screens/SettingsScreen'; // Import the SettingsScreen
 import UpdatePasswordScreen from '../screens/UpdatePasswordScreen'; // Import the SettingsScreen
 
-
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -17,15 +16,12 @@ const AppNavigator = () => {
         component={LoginScreen}
         options={{
           title: 'Sign In',
-
           headerLeft: () => null,
-
         }}
       />
       <Stack.Screen
         name="Dashboard"
         component={DashboardScreen}
-
         options={{ title: 'Dashboard', headerBackVisible: false }}
       />
       <Stack.Screen
@@ -40,12 +36,10 @@ const AppNavigator = () => {
         component={SettingsScreen}
         options={{
           title: 'Settings',
-
           headerBackVisible: false,
         }}
       />
       <Stack.Screen
-
         name="UpdatePassword"
         component={UpdatePasswordScreen}
         options={{ title: 'Update Password' }}
@@ -55,4 +49,3 @@ const AppNavigator = () => {
 };
 
 export default AppNavigator;
-

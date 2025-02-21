@@ -9,7 +9,6 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
 
-
 export default function DashboardScreen() {
   const QuickAccessCard = ({ title, icon, onPress }) => (
     <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -20,7 +19,6 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.container}>
-
       <View style={[styles.header, { alignItems: 'center' }]}>
         <Text style={styles.welcomeText}>Welcome to KEANFIT</Text>
         <Text style={styles.subtitleText}>
@@ -67,7 +65,6 @@ export default function DashboardScreen() {
       </ScrollView>
 
       <NavBar />
-
     </View>
   );
 }
@@ -75,7 +72,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
     backgroundColor: '#f9f9f9',
   },
   header: {
@@ -151,5 +147,4 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 15,
   },
-
 });

@@ -11,7 +11,6 @@ import { useNavigation } from '@react-navigation/native';
 import { auth } from '../services/firebaseConfig';
 import { FontAwesome } from '@expo/vector-icons';
 
-
 const NavBar = () => {
   const navigation = useNavigation();
 
@@ -29,7 +28,6 @@ const NavBar = () => {
 
   return (
     <View style={styles.navContainer}>
-
       <TouchableOpacity
         style={styles.navItem}
         onPress={() => navigation.navigate('Dashboard')}
@@ -49,7 +47,6 @@ const NavBar = () => {
       <TouchableOpacity style={styles.navItem} onPress={handleLogout}>
         <FontAwesome name="sign-out" size={24} color="#09355c" />
         <Text style={styles.navText}>Logout</Text>
-
       </TouchableOpacity>
     </View>
   );
