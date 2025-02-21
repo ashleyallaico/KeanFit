@@ -14,7 +14,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -115,10 +115,10 @@ export default function LoginScreen() {
           <TouchableOpacity
             onPress={() => setPasswordVisible(!passwordVisible)}
           >
-            <Icon
+            <FontAwesome
               name={passwordVisible ? 'eye-slash' : 'eye'}
               size={20}
-              color="gray"
+              color="#09355c"
             />
           </TouchableOpacity>
         </View>
@@ -128,15 +128,12 @@ export default function LoginScreen() {
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
-        {/* Forgot Password & Sign Up Links */}
+        {/* Forgot Password Link */}
         <View style={styles.footerLinks}>
           <TouchableOpacity
             onPress={() => navigation.navigate('ResetPassword')}
           >
             <Text style={styles.linkText}>Forgot Password?</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.linkText}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -183,10 +180,13 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
   },
+  eyeIcon: {
+    padding: 10,
+  },
   loginButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#09355c',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
@@ -199,12 +199,12 @@ const styles = StyleSheet.create({
   },
   footerLinks: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '100%',
     paddingHorizontal: 10,
   },
   linkText: {
-    color: '#007AFF',
+    color: '#09355c',
     fontSize: 16,
   },
 });
