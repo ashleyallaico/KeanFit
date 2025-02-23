@@ -18,6 +18,7 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import NavBar from '../components/NavBar';
+import Icon from 'react-native-vector-icons/FontAwesome'; 
 
 const UpdatePasswordScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -27,27 +28,7 @@ const UpdatePasswordScreen = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
-    const navigation = useNavigation();
-  
-
-  // const handleUpdatePassword = async () => {
-  //   if (newPassword !== confirmNewPassword) {
-  //     Alert.alert('Error', 'New passwords do not match.');
-  //     return;
-  //   }
-  //   try {
-  //     const user = auth.currentUser;
-  //     const credential = EmailAuthProvider.credential(user.email, currentPassword);
-
-  //     // Re-authenticate user
-  //     await reauthenticateWithCredential(user, credential);
-  //     // Update password
-  //     await updatePassword(user, newPassword);
-  //     Alert.alert('Success', 'Password updated successfully!');
-  //   } catch (error) {
-  //     Alert.alert('Error', error.message);
-  //   }
-  // };
+  const navigation = useNavigation();
 
   const isStrongPassword = (password) => {
     const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
@@ -60,7 +41,7 @@ const UpdatePasswordScreen = () => {
       Alert.alert('Error', 'New passwords do not match.');
       return;
     }
-  
+
     if (!isStrongPassword(newPassword)) {
       Alert.alert(
         'Weak Password',
@@ -68,30 +49,30 @@ const UpdatePasswordScreen = () => {
       );
       return;
     }
-  
+
     try {
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(user.email, currentPassword);
-  
+
       // Re-authenticate user
       await reauthenticateWithCredential(user, credential);
       // Update password
       await updatePassword(user, newPassword);
-  
+
       // Navigate after alert "OK"
       Alert.alert(
-        'Success', 
+        'Success',
         'Password updated successfully!',
         [
-          { 
-            text: 'OK', 
+          {
+            text: 'OK',
             onPress: () => navigation.navigate('Settings')
           },
         ],
         { cancelable: false }
       );
-  
-    
+
+
     } catch (error) {
       // Handle common errors gracefully
       if (error.code === 'auth/wrong-password') {
@@ -104,92 +85,134 @@ const UpdatePasswordScreen = () => {
     }
   };
 
-  const PasswordInput = ({
-    placeholder,
-    value,
-    setValue,
-    showPassword,
-    setShowPassword,
-  }) => (
-    <View style={styles.inputWrapper}>
-      <View style={styles.inputContainer}>
-        <FontAwesome
-          name="lock"
-          size={20}
-          color="#09355c"
-          style={styles.inputIcon}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={placeholder}
-          secureTextEntry={!showPassword}
-          value={value}
-          onChangeText={setValue}
-          placeholderTextColor="#666"
-        />
-        <TouchableOpacity
-          onPress={() => setShowPassword(!showPassword)}
-          style={styles.eyeIcon}
-        >
-          <FontAwesome
-            name={showPassword ? 'eye-slash' : 'eye'}
-            size={20}
-            color="#09355c"
-          />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Update Password</Text>
-          <Text style={styles.headerSubtitle}>Keep your account secure</Text>
-        </View>
-
         <View style={styles.content}>
           <View style={styles.card}>
-            <PasswordInput
-              placeholder="Current Password"
-              value={currentPassword}
-              setValue={setCurrentPassword}
-              showPassword={showCurrentPassword}
-              setShowPassword={setShowCurrentPassword}
-            />
+            {/* Current Password */}
+            <View style={styles.inputWrapper}>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Current Password"
+                  secureTextEntry={!showCurrentPassword}
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  <Icon
+                    name={showCurrentPassword ? "eye-slash" : "eye"}
+                    size={20}
+                    color="grey"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            <PasswordInput
-              placeholder="New Password"
-              value={newPassword}
-              setValue={setNewPassword}
-              showPassword={showNewPassword}
-              setShowPassword={setShowNewPassword}
-            />
+            {/* New Password */}
+            <View style={styles.inputWrapper}>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="New Password"
+                  secureTextEntry={!showNewPassword}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowNewPassword(!showNewPassword)}
+                >
+                  <Icon
+                    name={showNewPassword ? "eye-slash" : "eye"}
+                    size={20}
+                    color="grey"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            <PasswordInput
-              placeholder="Confirm New Password"
-              value={confirmNewPassword}
-              setValue={setConfirmNewPassword}
-              showPassword={showConfirmNewPassword}
-              setShowPassword={setShowConfirmNewPassword}
-            />
+            {/* Confirm New Password */}
+            <View style={styles.inputWrapper}>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm New Password"
+                  secureTextEntry={!showConfirmNewPassword}
+                  value={confirmNewPassword}
+                  onChangeText={setConfirmNewPassword}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                >
+                  <Icon
+                    name={showConfirmNewPassword ? "eye-slash" : "eye"}
+                    size={20}
+                    color="grey"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            <TouchableOpacity
-              style={styles.updateButton}
-              onPress={handleUpdatePassword}
-            >
-              <FontAwesome name="check" size={20} color="#fff" />
+            {/* Update Button */}
+            <TouchableOpacity style={styles.updateButton} onPress={handleUpdatePassword}>
               <Text style={styles.updateButtonText}>Update Password</Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        <NavBar />
       </View>
     </TouchableWithoutFeedback>
   );
 };
+//     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+//     <View style={styles.container}>
+//       <View style={styles.inputContainer}>
+//         <TextInput
+//           style={styles.input}
+//           placeholder="Current Password"
+//           secureTextEntry={!showCurrentPassword}
+//           value={currentPassword}
+//           onChangeText={setCurrentPassword}
+//         />
+//         <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+//           <Icon name={showCurrentPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
+//         </TouchableOpacity>
+//       </View>
+//       <View style={styles.inputContainer}>
+//         <TextInput
+//           style={styles.input}
+//           placeholder="New Password"
+//           secureTextEntry={!showNewPassword}
+//           value={newPassword}
+//           onChangeText={setNewPassword}
+//         />
+//         <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
+//           <Icon name={showNewPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
+//         </TouchableOpacity>
+//       </View>
+//       <View style={styles.inputContainer}>
+//         <TextInput
+//           style={styles.input}
+//           placeholder="Confirm New Password"
+//           secureTextEntry={!showConfirmNewPassword}
+//           value={confirmNewPassword}
+//           onChangeText={setConfirmNewPassword}
+//         />
+//         <TouchableOpacity onPress={() => setShowConfirmNewPassword(!showConfirmNewPassword)}>
+//           <Icon name={showConfirmNewPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
+//         </TouchableOpacity>
+//       </View>
+//       <Button title="Update Password" onPress={handleUpdatePassword} />
+//     </View>
+//   </TouchableWithoutFeedback>
+// );
+// };
 
 const styles = StyleSheet.create({
   container: {
