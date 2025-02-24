@@ -15,9 +15,7 @@ import {
   EmailAuthProvider,
   updatePassword,
 } from 'firebase/auth';
-import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import NavBar from '../components/NavBar';
 import Icon from 'react-native-vector-icons/FontAwesome'; 
 
 const UpdatePasswordScreen = () => {
@@ -170,49 +168,7 @@ const UpdatePasswordScreen = () => {
     </TouchableWithoutFeedback>
   );
 };
-//     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-//     <View style={styles.container}>
-//       <View style={styles.inputContainer}>
-//         <TextInput
-//           style={styles.input}
-//           placeholder="Current Password"
-//           secureTextEntry={!showCurrentPassword}
-//           value={currentPassword}
-//           onChangeText={setCurrentPassword}
-//         />
-//         <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
-//           <Icon name={showCurrentPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
-//         </TouchableOpacity>
-//       </View>
-//       <View style={styles.inputContainer}>
-//         <TextInput
-//           style={styles.input}
-//           placeholder="New Password"
-//           secureTextEntry={!showNewPassword}
-//           value={newPassword}
-//           onChangeText={setNewPassword}
-//         />
-//         <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
-//           <Icon name={showNewPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
-//         </TouchableOpacity>
-//       </View>
-//       <View style={styles.inputContainer}>
-//         <TextInput
-//           style={styles.input}
-//           placeholder="Confirm New Password"
-//           secureTextEntry={!showConfirmNewPassword}
-//           value={confirmNewPassword}
-//           onChangeText={setConfirmNewPassword}
-//         />
-//         <TouchableOpacity onPress={() => setShowConfirmNewPassword(!showConfirmNewPassword)}>
-//           <Icon name={showConfirmNewPassword ? 'eye-slash' : 'eye'} size={20} color="grey" />
-//         </TouchableOpacity>
-//       </View>
-//       <Button title="Update Password" onPress={handleUpdatePassword} />
-//     </View>
-//   </TouchableWithoutFeedback>
-// );
-// };
+
 
 const styles = StyleSheet.create({
   container: {
