@@ -8,8 +8,12 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
+import { useNavigation } from '@react-navigation/native';
 
 export default function DashboardScreen() {
+  const navigation = useNavigation();
+  
+
   const QuickAccessCard = ({ title, icon, onPress }) => (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <FontAwesome name={icon} size={30} color="#09355c" />
@@ -36,10 +40,10 @@ export default function DashboardScreen() {
             }}
           />
           <QuickAccessCard
-            title="Progress"
+            title="Track Workout"
             icon="bar-chart"
             onPress={() => {
-              /* Navigate to progress tracking */
+              navigation.navigate('TrackWorkout')
             }}
           />
           <QuickAccessCard
