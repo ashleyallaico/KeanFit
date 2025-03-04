@@ -24,6 +24,7 @@ const TrackWorkoutScreen = () => {
             let workoutData = {
                 date: new Date().toLocaleTimeString(), // Record the time of the workout
                 // any additional fields needed 
+                
             };
 
             // Add fields based on the selected workout category

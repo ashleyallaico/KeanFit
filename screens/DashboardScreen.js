@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,48 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
 import { useNavigation } from '@react-navigation/native';
+import { setupActivityListener } from '../services/fetchUserActivities'; // Adjust the path as necessary
+
 
 export default function DashboardScreen() {
+  //activities i
+  const [activities, setActivities] = useState({});
   const navigation = useNavigation();
-  
+
+  useEffect(() => {
+    const unsubscribe = setupActivityListener(setActivities);
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+
+
+  const renderActivityDetails = (category, entryDetails) => {
+    switch (category) {
+      case 'Cardio':
+        return (
+          <Text>
+            {entryDetails.date}: Walked {entryDetails.steps} steps in {entryDetails.duration} minutes 
+          </Text>
+        );
+      case 'Strength':
+        return (
+          <Text>
+            {entryDetails.date}: Lifted {entryDetails.weight} lbs for {entryDetails.reps} reps 
+          </Text>
+        );
+      case 'Flexibility':
+        return (
+          <Text>
+            {entryDetails.date}: Practiced yoga for {entryDetails.duration} minutes
+          </Text>
+        );
+      default:
+        return <Text>{entryDetails.date}: Activity recorded</Text>;
+    }
+  };
 
   const QuickAccessCard = ({ title, icon, onPress }) => (
     <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -62,10 +100,24 @@ export default function DashboardScreen() {
           />
         </View>
 
-        <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>Your Stats</Text>
-          {/* Add your stats components here */}
-        </View>
+
+        <Text style={styles.somethingidk}>Your Stats</Text>
+        {/* List all individual categories inside the object*/}
+
+        {Object.entries(activities).map(([category, entries]) => (
+          <View key={category} style={styles.categoryContainer}>
+            <Text style={styles.categoryTitle}>{category}</Text>
+
+            {/* list all the activities inside each categorie */}
+            {Object.entries(entries).map(([entryId, entryDetails]) => (
+              <View key={entryId}>
+                {renderActivityDetails(category, entryDetails)}
+              </View>
+
+            ))}
+          </View>
+
+        ))}
       </ScrollView>
 
       <NavBar />
