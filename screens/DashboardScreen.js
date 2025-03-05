@@ -8,51 +8,14 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
-import { useNavigation } from '@react-navigation/native';
-import { setupActivityListener } from '../services/fetchUserActivities'; 
+import { useNavigation } from '@react-navigation/native'; 
+import UserStats from '../components/UserStats';
 import WorkoutRecommendations from '../components/WorkoutRecommendations';
 
 
 
 export default function DashboardScreen() {
-  //activities i
-  const [activities, setActivities] = useState({});
   const navigation = useNavigation();
-
-  useEffect(() => {
-    const unsubscribe = setupActivityListener(setActivities);
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-
-
-  const renderActivityDetails = (category, entryDetails) => {
-    switch (category) {
-      case 'Cardio':
-        return (
-          <Text>
-            {entryDetails.date}: Walked {entryDetails.steps} steps in {entryDetails.duration} minutes 
-          </Text>
-        );
-      case 'Strength':
-        return (
-          <Text>
-            {entryDetails.date}: Lifted {entryDetails.weight} lbs for {entryDetails.reps} reps 
-          </Text>
-        );
-      case 'Flexibility':
-        return (
-          <Text>
-            {entryDetails.date}: Practiced yoga for {entryDetails.duration} minutes
-          </Text>
-        );
-      default:
-        return <Text>{entryDetails.date}: Activity recorded</Text>;
-    }
-  };
 
   const QuickAccessCard = ({ title, icon, onPress }) => (
     <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -103,26 +66,10 @@ export default function DashboardScreen() {
         </View>
 
 
-        <Text style={styles.stylesAddLates}>Your Stats</Text>
-        {/* List all individual categories inside the object*/}
+        <Text style={styles.sectionTitle}>Your Stats</Text>
+        <UserStats/>
 
-        {Object.entries(activities).map(([category, entries]) => (
-          <View key={category} style={styles.categoryContainer}>
-            <Text style={styles.categoryTitle}>{category}</Text>
-
-            {/* list all the activities inside each categorie */}
-            {Object.entries(entries).map(([entryId, entryDetails]) => (
-              <View key={entryId}>
-                {renderActivityDetails(category, entryDetails)}
-              </View>
-
-            ))}
-          </View>
-
-        ))}
-
-
-         <Text style={styles.stylesAddLates}>Recomendated Workouts:</Text>
+         <Text style={styles.sectionTitle}>Recomendated Workouts:</Text>
          <WorkoutRecommendations/>
       </ScrollView>
 
@@ -193,7 +140,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 15,
     padding: 20,
-    marginBottom: 90, // Add space for NavBar
+    marginBottom: 90, 
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -207,6 +154,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 15,
+    marginBottom: 10,
   },
 });
