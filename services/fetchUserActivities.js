@@ -16,7 +16,7 @@ export const setupActivityListener = (callback) => {
       }
     });
 
-    return unsubscribe; // Return the unsubscribe function to call when the component unmounts
+    return unsubscribe; 
   } else {
     throw new Error("User not authenticated");
   }

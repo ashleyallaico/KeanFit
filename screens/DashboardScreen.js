@@ -9,7 +9,9 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
 import { useNavigation } from '@react-navigation/native';
-import { setupActivityListener } from '../services/fetchUserActivities'; // Adjust the path as necessary
+import { setupActivityListener } from '../services/fetchUserActivities'; 
+import WorkoutRecommendations from '../components/WorkoutRecommendations';
+
 
 
 export default function DashboardScreen() {
@@ -95,13 +97,13 @@ export default function DashboardScreen() {
             title="Profile"
             icon="user"
             onPress={() => {
-              /* Navigate to profile */
+              navigation.navigate('Profile')
             }}
           />
         </View>
 
 
-        <Text style={styles.somethingidk}>Your Stats</Text>
+        <Text style={styles.stylesAddLates}>Your Stats</Text>
         {/* List all individual categories inside the object*/}
 
         {Object.entries(activities).map(([category, entries]) => (
@@ -118,6 +120,10 @@ export default function DashboardScreen() {
           </View>
 
         ))}
+
+
+         <Text style={styles.stylesAddLates}>Recomendated Workouts:</Text>
+         <WorkoutRecommendations/>
       </ScrollView>
 
       <NavBar />

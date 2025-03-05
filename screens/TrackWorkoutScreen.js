@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import CardioComponent from '../components/CardioComponent';
 import { getDatabase, ref, push, set } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
+import NavBar from '../components/NavBar';
 
 
 const TrackWorkoutScreen = () => {
@@ -22,9 +23,9 @@ const TrackWorkoutScreen = () => {
         if (user) {
             const uid = user.uid;
             let workoutData = {
-                date: new Date().toLocaleTimeString(), // Record the time of the workout
-                // any additional fields needed 
-                
+                time: new Date().toLocaleTimeString(),
+                date: new Date().toLocaleDateString()
+
             };
 
             // Add fields based on the selected workout category
@@ -68,115 +69,138 @@ const TrackWorkoutScreen = () => {
         }
     };
 
-    return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.header}>Track Your Workout</Text>
-            <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={selectedCategory}
-                    onValueChange={(itemValue, itemIndex) => setSelectedCategory(itemValue)}
-                    style={styles.picker}>
-                    <Picker.Item label="Select Workout" value="Select Workout" />
-                    <Picker.Item label="Cardio" value="Cardio" />
-                    <Picker.Item label="Strength Training" value="Strength" />
-                    <Picker.Item label="Flexibility" value="Flexibility" />
-                </Picker>
-            </View>
+return (
+    <View style={styles.container}>
+        <ScrollView style={styles.scrollContainer}>
+            <View style={styles.trackingContainer}>
+                <Text style={styles.header}>Track Your Workout</Text>
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={selectedCategory}
+                        onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+                        style={styles.picker}>
+                        <Picker.Item label="Select Workout" value="Select Workout" />
+                        <Picker.Item label="Cardio" value="Cardio" />
+                        <Picker.Item label="Strength Training" value="Strength" />
+                        <Picker.Item label="Flexibility" value="Flexibility" />
+                    </Picker>
+                </View>
 
-            <View style={styles.formContainer}>
+                <View style={styles.formContainer}>
+                    {selectedCategory === 'Select Workout' && (
+                        <Text style={styles.header}>Please Select a Workout to track</Text>
+                    )}
+                    {selectedCategory === 'Cardio' && (
+                        <View>
+                            <CardioComponent
+                                currentSteps={steps}
+                                setCurrentSteps={setSteps}
+                                duration={duration}
+                                setDuration={setDuration}
+                                isStepMode={isStepMode}
+                                setIsStepMode={setIsStepMode}
+                            />
+                            <Button
+                                title="Save Workout"
+                                onPress={handleSubmit}
+                                color="#09355c"
+                                style={styles.saveButton}
+                            />
+                        </View>
+                    )}
 
-                {selectedCategory === 'Select Workout' && (
-                    <Text style={styles.header}>Please Select a Workout to track</Text>
-                )}
-                {selectedCategory === 'Cardio' && (
-                    <View>
-                        <CardioComponent
-
-                            currentSteps={steps}
-                            setCurrentSteps={setSteps}
-                            duration={duration}
-                            setDuration={setDuration}
-                            isStepMode={isStepMode}
-                            setIsStepMode={setIsStepMode}
-                        />
-                        <Button
-                            title="Save Workout"
-                            onPress={handleSubmit}
-                            color="#09355c"
-                            style={styles.saveButton}
-                        />
-                    </View>
-
-
-                )}
-
-                {selectedCategory === 'Strength' && (
-                    <View>
-                        <TextInput
-                            style={styles.input}
-                            onChangeText={setReps}
-                            value={reps}
-                            placeholder="Enter repetitions"
-                            keyboardType="numeric"
-                        />
-                        <TextInput
-                            style={styles.input}
-                            onChangeText={setSets}
-                            value={sets}
-                            placeholder="Enter sets"
-                            keyboardType="numeric"
-                        />
-                        <TextInput
-                            style={styles.input}
-                            onChangeText={setWeight}
-                            value={weight}
-                            placeholder="Enter weight (in lbs)"
-                            keyboardType="numeric"
-                        />
-                        <Button
-                            title="Save Workout"
-                            onPress={handleSubmit}
-                            color="#09355c"
-                            style={styles.saveButton}
-                        />
-                    </View>
-                )}
-
+                    {selectedCategory === 'Strength' && (
+                        <View>
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={setReps}
+                                value={reps}
+                                placeholder="Enter repetitions"
+                                keyboardType="numeric"
+                            />
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={setSets}
+                                value={sets}
+                                placeholder="Enter sets"
+                                keyboardType="numeric"
+                            />
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={setWeight}
+                                value={weight}
+                                placeholder="Enter weight (in lbs)"
+                                keyboardType="numeric"
+                            />
+                            <Button
+                                title="Save Workout"
+                                onPress={handleSubmit}
+                                color="#09355c"
+                                style={styles.saveButton}
+                            />
+                        </View>
+                    )}
+                </View>
             </View>
         </ScrollView>
-    );
+
+        <NavBar />
+    </View>
+);
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f9f9f9',
+container: {
+    flex: 1,
+},
+scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 70, 
+},
+trackingContainer: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+        width: 0,
+        height: 2,
     },
-    header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#09355c',
-    },
-    input: {
-        height: 40,
-        marginBottom: 12,
-        borderWidth: 1,
-        padding: 10,
-        borderRadius: 5,
-        borderColor: '#ccc',
-        backgroundColor: '#fff',
-    },
-    pickerContainer: {
-        marginBottom: 20,
-    },
-    formContainer: {
-        marginBottom: 20,
-    },
-    saveButton: {
-        marginTop: 10,
-    }
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+},
+header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#09355c',
+},
+input: {
+    height: 40,
+    marginBottom: 12,
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    borderColor: '#ccc',
+    backgroundColor: '#fff',
+},
+pickerContainer: {
+    marginBottom: 20,
+},
+formContainer: {
+    marginBottom: 20,
+},
+saveButton: {
+    marginTop: 10,
+},
+navContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+},
 });
 
 export default TrackWorkoutScreen;

@@ -6,6 +6,7 @@ import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import SettingsScreen from '../screens/SettingsScreen'; 
 import UpdatePasswordScreen from '../screens/UpdatePasswordScreen'; 
 import TrackWorkoutScreen from '../screens/TrackWorkoutScreen'; 
+import ProfileScreen from '../screens/ProfileScreen'; 
 
 
 const Stack = createNativeStackNavigator();
@@ -49,7 +50,12 @@ const AppNavigator = () => {
       <Stack.Screen
         name="TrackWorkout"
         component={TrackWorkoutScreen}
-        options={{ title: 'Track Workout' }}
+        options={{ title: 'Track Workout', headerBackVisible: false  }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profile', headerBackVisible: false  }}
       />
     </Stack.Navigator>
   );
