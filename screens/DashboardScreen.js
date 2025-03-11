@@ -1,18 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
 import { useNavigation } from '@react-navigation/native'; 
 import UserStats from '../components/UserStats';
 import WorkoutRecommendations from '../components/WorkoutRecommendations';
-
-
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
@@ -24,54 +16,51 @@ export default function DashboardScreen() {
     </TouchableOpacity>
   );
 
+  // Data for FlatList (Quick Access Cards)
+  const quickAccessData = [
+    { title: "My Workout", icon: "heartbeat", navigateTo: "MyWorkout" },
+    { title: "Track Workout", icon: "bar-chart", navigateTo: "TrackWorkout" },
+    { title: "Nutrition", icon: "cutlery", navigateTo: "Nutrition" },
+    { title: "Profile", icon: "user", navigateTo: "Profile" }
+  ];
+
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { alignItems: 'center' }]}>
-        <Text style={styles.welcomeText}>Welcome to KEANFIT</Text>
-        <Text style={styles.subtitleText}>
-          Your fitness journey starts here
-        </Text>
-      </View>
+      <FlatList
+        ListHeaderComponent={
+          <>
+            {/* Header Section */}
+            <View style={[styles.header, { alignItems: 'center' }]}>
+              <Text style={styles.welcomeText}>Welcome to KEANFIT</Text>
+              <Text style={styles.subtitleText}>Your fitness journey starts here</Text>
+            </View>
 
-      <ScrollView style={styles.content}>
-        <View style={styles.cardsContainer}>
-          <QuickAccessCard
-            title="Workout Plans"
-            icon="heartbeat"
-            onPress={() => {
-              /* Navigate to workout plans */
-            }}
-          />
-          <QuickAccessCard
-            title="Track Workout"
-            icon="bar-chart"
-            onPress={() => {
-              navigation.navigate('TrackWorkout')
-            }}
-          />
-          <QuickAccessCard
-            title="Nutrition"
-            icon="cutlery"
-            onPress={() => {
-              /* Navigate to nutrition */
-            }}
-          />
-          <QuickAccessCard
-            title="Profile"
-            icon="user"
-            onPress={() => {
-              navigation.navigate('Profile')
-            }}
-          />
-        </View>
+            {/* Quick Access Cards */}
+            <View style={styles.cardsContainer}>
+              {quickAccessData.map((item, index) => (
+                <QuickAccessCard
+                  key={index}
+                  title={item.title}
+                  icon={item.icon}
+                  onPress={() => navigation.navigate(item.navigateTo)}
+                />
+              ))}
+            </View>
 
+            {/* User Stats */}
+            <Text style={styles.sectionTitle}>Your Stats</Text>
+            <UserStats />
 
-        <Text style={styles.sectionTitle}>Your Stats</Text>
-        <UserStats/>
-
-         <Text style={styles.sectionTitle}>Recomendated Workouts:</Text>
-         <WorkoutRecommendations/>
-      </ScrollView>
+            {/* Recommended Workouts */}
+            <Text style={styles.sectionTitle}>Recommended Workouts:</Text>
+            <WorkoutRecommendations />
+          </>
+        }
+        data={[]} // Empty data array since content is in ListHeaderComponent
+        renderItem={null} // No default rendering needed
+        keyExtractor={(_, index) => index.toString()}
+        showsVerticalScrollIndicator={false}
+      />
 
       <NavBar />
     </View>
@@ -101,10 +90,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     opacity: 0.8,
   },
-  content: {
-    flex: 1,
-    padding: 20,
-  },
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -122,10 +107,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
@@ -136,24 +118,13 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '600',
   },
-  statsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 90, 
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
+    marginLeft: 10,
   },
 });
+
+

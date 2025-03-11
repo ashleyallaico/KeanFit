@@ -1,26 +1,26 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Switch, StyleSheet, Button, Alert } from 'react-native';
+import { View, Text, StyleSheet, Button, Alert } from 'react-native';
 import { Pedometer } from 'expo-sensors';
 
-const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration, isStepMode, setIsStepMode }) => {
-
+const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration, handleSubmit, isTracking, setIsTracking }) => {
     const lastStepCount = useRef(0);
     const timerInterval = useRef(null);
 
     useEffect(() => {
-        if (isStepMode) {
-            const subscribe = Pedometer.watchStepCount(result => {
+        if (isTracking) {
+            // Start Timer
+            timerInterval.current = setInterval(() => {
+                setDuration((prevDuration) => prevDuration + 1);
+            }, 1000);
+
+            // Start Step Tracking
+            const subscribe = Pedometer.watchStepCount((result) => {
                 const newSteps = result.steps - lastStepCount.current;
                 if (newSteps > 0) {
-                    setCurrentSteps(currentSteps => currentSteps + newSteps);
+                    setCurrentSteps((prevSteps) => prevSteps + newSteps);
                     lastStepCount.current = result.steps;
                 }
             });
-
-            timerInterval.current = setInterval(() => {
-                setDuration(duration => duration + 1);
-            }, 1000);
 
             return () => {
                 clearInterval(timerInterval.current);
@@ -29,7 +29,12 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
         } else {
             clearInterval(timerInterval.current);
         }
-    }, [isStepMode]);
+    }, [isTracking]);
+
+    const toggleTracking = () => {
+        // setIsRunning(!isRunning);
+        setIsTracking(!isTracking);
+    };
 
     const handleReset = () => {
         Alert.alert(
@@ -40,6 +45,7 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
                     text: "Yes", onPress: () => {
                         setCurrentSteps(0);
                         setDuration(0);
+                        setIsTracking(false);
                         lastStepCount.current = 0;
                     }
                 },
@@ -49,36 +55,39 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
         );
     };
 
-    const handleModeChange = (newMode) => {
-        setIsStepMode(newMode);
-        setCurrentSteps(0);
-        lastStepCount.current = 0;
+    const calculateDistance = (steps) => {
+        const stepLength = 0.76; // Approximate step length in meters
+        return (steps * stepLength).toFixed(2);
     };
 
-    const calculateDistance = (steps) => {
-        const stepLength = 0.76;
-        return (steps * stepLength).toFixed(2);
+    const formatTime = (seconds) => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Cardio Workout</Text>
-            <Switch
-                onValueChange={handleModeChange}
-                value={isStepMode}
-                style={styles.switch}
-            />
+            <Text style={styles.stepsCount}>Steps: {currentSteps}</Text>
+            <Text style={styles.timerText}>Time: {formatTime(duration)}</Text>
+            <Text style={styles.distanceText}>Distance: {calculateDistance(currentSteps)} meters</Text>
 
-            <>
-                <Text style={styles.stepsCount}>Steps: {currentSteps}</Text>
-                <Text style={styles.timerText}>Time: {duration} seconds</Text>
-                <Text style={styles.distanceText}>Distance: {calculateDistance(currentSteps)} meters</Text>
-                <Button title="Restart Workout" onPress={handleReset} color="#09355c" />
+            <View style={styles.buttonContainer}>
+                <Button
+                    title={isTracking ? "Pause" : "Start"}
+                    onPress={toggleTracking}
+                    color={isTracking ? "#FFA500" : "#4CAF50"}
+                />
+                <Button title="Restart" onPress={handleReset} color="#FF6347" />
+                <Button
+                    title="Save Workout"
+                    onPress={handleSubmit}
+                    color="#09355c"
+                    style={styles.saveButton}
+                />
 
-            </>
-
-            
-
+            </View>
         </View>
     );
 };
@@ -86,27 +95,32 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
 const styles = StyleSheet.create({
     container: {
         marginBottom: 20,
+        alignItems: 'center',
     },
     header: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
     },
-    switch: {
-        marginBottom: 12,
-    },
     stepsCount: {
         fontSize: 16,
         marginBottom: 12,
     },
     timerText: {
-        fontSize: 16,
+        fontSize: 20,
+        fontWeight: 'bold',
         marginBottom: 12,
     },
     distanceText: {
         fontSize: 16,
         marginBottom: 12,
-    }
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+        marginTop: 15,
+    },
 });
 
 export default CardioComponent;

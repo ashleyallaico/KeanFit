@@ -7,6 +7,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import UpdatePasswordScreen from '../screens/UpdatePasswordScreen'; 
 import TrackWorkoutScreen from '../screens/TrackWorkoutScreen'; 
 import ProfileScreen from '../screens/ProfileScreen'; 
+import MyWorkoutScreen from '../screens/MyWorkoutScreen'; 
 
 
 const Stack = createNativeStackNavigator();
@@ -55,6 +56,11 @@ const AppNavigator = () => {
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
+        options={{ title: 'Profile', headerBackVisible: false  }}
+      />
+      <Stack.Screen
+        name="MyWorkout"
+        component={MyWorkoutScreen}
         options={{ title: 'Profile', headerBackVisible: false  }}
       />
     </Stack.Navigator>

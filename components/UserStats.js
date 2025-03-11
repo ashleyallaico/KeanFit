@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { setupActivityListener } from '../services/fetchUserActivities'; 
+import { setupActivityListener } from '../services/fetchUserActivities';
 
 const UserStats = () => {
   const [activities, setActivities] = useState({});
@@ -11,7 +11,7 @@ const UserStats = () => {
   }, []);
 
   const getCurrentDate = () => {
-    return new Date().toLocaleDateString(); 
+    return new Date().toLocaleDateString();
   };
 
   const todayDate = getCurrentDate();
@@ -22,7 +22,7 @@ const UserStats = () => {
   const todaySummary = {
     Cardio: { totalSteps: 0, totalDuration: 0 },
     Strength: { totalReps: 0, totalWeight: 0 },
-    Flexibility: { totalDuration: 0 },
+    Yoga: { totalDuration: 0 },
   };
 
   // Separate and accumulate today's and past activities
@@ -35,10 +35,10 @@ const UserStats = () => {
         // Convert string values to numbers before summing
         if (category === 'Cardio') {
           todaySummary.Cardio.totalSteps += Number(entryDetails.steps) || 0;
-          todaySummary.Cardio.totalDuration += Number(entryDetails.duration) || 0;
+          todaySummary.Cardio.totalDuration += Number(entryDetails.cardioDuration) || 0;
 
-        } else if (category === 'Flexibility') {
-          todaySummary.Flexibility.totalDuration += Number(entryDetails.duration) || 0;
+        } else if (category === 'Yoga') {
+          todaySummary.Yoga.totalDuration += Number(entryDetails.yogaDuration) || 0;
         }
       } else {
         if (!pastActivities[category]) pastActivities[category] = {};
@@ -62,22 +62,29 @@ const UserStats = () => {
               {/* List all individual entries for today */}
               {Object.entries(entries).map(([entryId, entryDetails]) => (
                 <Text key={entryId} style={styles.entryText}>
-                  {entryDetails.date}: {category} - {entryDetails.steps ? `Walked ${entryDetails.steps} steps` : ''}
+                  {entryDetails.date}: {category} - {entryDetails.steps ? `Walked ${entryDetails.steps} steps ` : ''}
                   {entryDetails.reps ? ` Lifted ${entryDetails.weight} lbs for ${entryDetails.reps} reps` : ''}
-                  {entryDetails.duration ? ` Practiced for ${entryDetails.duration} minutes` : ''}
+
+                  {entryDetails.cardioDuration
+                    ? `Practiced for ${Math.floor(entryDetails.cardioDuration / 60)} min ${entryDetails.cardioDuration % 60} sec`
+                    : ''}
+
+                  {entryDetails.yogaDuration
+                    ? `Practiced for ${Math.floor(entryDetails.yogaDuration / 60)} min ${entryDetails.yogaDuration % 60} sec`
+                    : ''}
                 </Text>
               ))}
 
-              {/* Display "Today's Total" at the bottom of each category */}
+              {/* Display Today total at the bottom of each category */}
               {category === 'Cardio' && todaySummary.Cardio.totalSteps > 0 && (
                 <Text style={styles.summaryText}>
-                  Total: Walked {todaySummary.Cardio.totalSteps} steps in {todaySummary.Cardio.totalDuration} minutes
+                  Total: Walked {todaySummary.Cardio.totalSteps} steps in {Math.floor(todaySummary.Cardio.totalDuration / 60)} min {todaySummary.Cardio.totalDuration % 60} sec
                 </Text>
               )}
-              
-              {category === 'Flexibility' && todaySummary.Flexibility.totalDuration > 0 && (
+
+              {category === 'Yoga' && todaySummary.Yoga.totalDuration > 0 && (
                 <Text style={styles.summaryText}>
-                  Total: Practiced for {todaySummary.Flexibility.totalDuration} minutes
+                    Total: Practiced for {Math.floor(todaySummary.Yoga.totalDuration / 60)} min {todaySummary.Yoga.totalDuration % 60} sec
                 </Text>
               )}
             </View>
@@ -85,7 +92,7 @@ const UserStats = () => {
         </View>
       )}
 
-      {/* Past Exercises and Individual Entries Only */}
+      {/* Past Exercises and Individual Entries  */}
       {Object.keys(pastActivities).length > 0 && (
         <View style={styles.pastContainer}>
           <Text style={styles.pastTitle}>Previous Exercises</Text>
@@ -96,7 +103,8 @@ const UserStats = () => {
                 <Text key={entryId} style={styles.entryText}>
                   {entryDetails.date}: {category} - {entryDetails.steps ? `Walked ${entryDetails.steps} steps` : ''}
                   {entryDetails.reps ? ` Lifted ${entryDetails.weight} lbs for ${entryDetails.reps} reps` : ''}
-                  {entryDetails.duration ? ` Practiced for ${entryDetails.duration} minutes` : ''}
+                  {entryDetails.cardioDuration ? ` Practiced for ${entryDetails.cardioDuration} minutes` : ''}
+                  {entryDetails.yogaDuration ? ` Practiced for ${entryDetails.yogaDuration} minutes` : ''}
                 </Text>
               ))}
             </View>
