@@ -51,7 +51,7 @@ const NavBar = () => {
         style={styles.navItem}
         onPress={() => navigation.navigate('Workouts')}
       >
-        <FontAwesome name="workout" size={24} color="#09355c" />
+        <FontAwesome name="search" size={24} color="#09355c" />
         <Text style={styles.navText}>Workouts</Text>
       </TouchableOpacity>
 
