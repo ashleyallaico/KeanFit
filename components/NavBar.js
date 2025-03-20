@@ -38,6 +38,14 @@ const NavBar = () => {
 
       <TouchableOpacity
         style={styles.navItem}
+        onPress={() => navigation.navigate('Workouts')}
+      >
+        <FontAwesome name="workout" size={24} color="#09355c" />
+        <Text style={styles.navText}>Workouts</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.navItem}
         onPress={() => navigation.navigate('Settings')}
       >
         <FontAwesome name="cog" size={24} color="#09355c" />
