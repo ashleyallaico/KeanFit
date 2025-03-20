@@ -14,6 +14,17 @@ import { FontAwesome } from '@expo/vector-icons';
 const NavBar = () => {
   const navigation = useNavigation();
 
+  const confirmLogout = () => {
+    Alert.alert(
+      "Confirm Logout", 
+      "Are you sure you want to log out?", 
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", onPress: handleLogout }
+      ]
+    );
+  };
+
   const handleLogout = async () => {
     try {
       await auth.signOut();
@@ -52,7 +63,7 @@ const NavBar = () => {
         <Text style={styles.navText}>Settings</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.navItem} onPress={handleLogout}>
+      <TouchableOpacity style={styles.navItem} onPress={confirmLogout}>
         <FontAwesome name="sign-out" size={24} color="#09355c" />
         <Text style={styles.navText}>Logout</Text>
       </TouchableOpacity>

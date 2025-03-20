@@ -3,9 +3,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
-import SettingsScreen from '../screens/SettingsScreen'; // Import the SettingsScreen
+import SettingsScreen from '../screens/SettingsScreen'; 
 import WorkoutsScreen from '../screens/WorkoutsScreen';
-import UpdatePasswordScreen from '../screens/UpdatePasswordScreen'; // Import the SettingsScreen
+import UpdatePasswordScreen from '../screens/UpdatePasswordScreen'; 
+import TrackWorkoutScreen from '../screens/TrackWorkoutScreen'; 
+import ProfileScreen from '../screens/ProfileScreen'; 
+import MyWorkoutScreen from '../screens/MyWorkoutScreen'; 
+
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +56,21 @@ const AppNavigator = () => {
         name="UpdatePassword"
         component={UpdatePasswordScreen}
         options={{ title: 'Update Password' }}
+      />
+      <Stack.Screen
+        name="TrackWorkout"
+        component={TrackWorkoutScreen}
+        options={{ title: 'Track Workout', headerBackVisible: false  }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profile', headerBackVisible: false  }}
+      />
+      <Stack.Screen
+        name="MyWorkout"
+        component={MyWorkoutScreen}
+        options={{ title: 'Profile', headerBackVisible: false  }}
       />
     </Stack.Navigator>
   );
