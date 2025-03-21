@@ -9,6 +9,7 @@ import TrackWorkoutScreen from '../screens/TrackWorkoutScreen';
 import ProfileScreen from '../screens/ProfileScreen'; 
 import MyWorkoutScreen from '../screens/MyWorkoutScreen'; 
 import WorkoutsScreen from '../screens/WorkoutsScreen'; 
+import WorkoutPreferences from '../screens/WorkoutPreferences';
 
 
 const Stack = createNativeStackNavigator();
@@ -68,6 +69,11 @@ const AppNavigator = () => {
         name="Workouts"
         component={WorkoutsScreen}
         options={{ title: 'Workouts', headerBackVisible: false  }}
+      />
+      <Stack.Screen
+        name="WorkoutPreferences"
+        component={WorkoutPreferences}
+        options={{ title: 'Workout Preference', headerBackVisible: false  }}
       />
     </Stack.Navigator>
   );
