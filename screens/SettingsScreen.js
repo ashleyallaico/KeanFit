@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,21 @@ import NavBar from '../components/NavBar';
 import { useNavigation } from '@react-navigation/native';
 import { getDatabase, ref, set } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
+import { fetchUserProfile } from '../services/userService';
+import { CATEGORIES } from '../constants/categories';
 
 const SettingsScreen = () => {
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const navigation = useNavigation();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = fetchUserProfile((profileData) => {
+      setProfile(profileData);
+    });
+    return () => unsubscribe(); 
+  }, []);
 
   const handleDarkModeToggle = () => {
     setDarkModeEnabled((prevState) => !prevState);
@@ -24,49 +34,6 @@ const SettingsScreen = () => {
 
   const handleNotificationsToggle = () => {
     setNotificationsEnabled((prevState) => !prevState);
-  };
-
-  const disableAccount = () => {
-    Alert.alert(
-      'Disable Account',
-      'Are you sure you want to disable your account?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Disable',
-          onPress: () => {
-            const userId = auth.currentUser.uid;
-            const db = getDatabase();
-            const accountStatusRef = ref(db, `AccountDissable/${userId}`);
-            set(accountStatusRef, true)
-              .then(() => {
-                auth
-                  .signOut()
-                  .then(() => {
-                    navigation.replace('Login');
-                    Alert.alert(
-                      'Account Disabled',
-                      'Your account has been disabled successfully.'
-                    );
-                  })
-                  .catch((error) => {
-                    Alert.alert('Logout Failed', error.message);
-                  });
-              })
-              .catch((error) => {
-                Alert.alert(
-                  'Error',
-                  'Failed to disable account: ' + error.message
-                );
-              });
-          },
-          style: 'destructive',
-        },
-      ]
-    );
   };
 
   const SettingItem = ({ icon, title, children }) => (
@@ -81,14 +48,43 @@ const SettingsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <Text style={styles.headerSubtitle}>Customize your experience</Text>
+      {/*Profile Section*/}
+      <View style={styles.profileContainer}>
+        {profile ? (
+          <>
+          <FontAwesome name="user-circle" size={80} color="#09355c" />
+          <Text style={styles.profileText}>{profile.Name}</Text>
+          </>
+          ) : (
+            <Text>Loading profile...</Text>
+        )}     
       </View>
 
       <View style={styles.content}>
+        {/*Account Section*/}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+        <Text style={styles.sectionTitle}>Account</Text>
+        <View style={styles.card}>
+          <TouchableOpacity
+              style={styles.buttonGeneral}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <FontAwesome name="user" size={20} color="#09355c" />
+              <Text style={styles.buttonGeneralText}>Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+              style={styles.buttonGeneral}
+              onPress={() => navigation.navigate('WorkoutPreferences')}
+            >
+              <FontAwesome name="heartbeat" size={20} color="#09355c" />
+              <Text style={styles.buttonGeneralText}>Workout Preferences</Text>
+          </TouchableOpacity>
+        </View>
+        </View>
+
+        {/*General Section*/}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>General</Text>
           <View style={styles.card}>
             <SettingItem icon="bell" title="Enable Notifications">
               <Switch
@@ -110,27 +106,6 @@ const SettingsScreen = () => {
             </SettingItem>
           </View>
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.card}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate('UpdatePassword')}
-            >
-              <FontAwesome name="lock" size={20} color="#fff" />
-              <Text style={styles.buttonText}>Update Password</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, styles.buttonDanger]}
-              onPress={disableAccount}
-            >
-              <FontAwesome name="user-times" size={20} color="#fff" />
-              <Text style={styles.buttonText}>Disable Account</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       </View>
 
       <NavBar />
@@ -143,24 +118,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9f9f9',
   },
-  header: {
-    backgroundColor: '#09355c',
-    padding: 20,
-    paddingTop: 25,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  profileContainer: {
     alignItems: 'center',
+    marginVertical: 20,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 5,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#fff',
-    opacity: 0.8,
+  profileText: {
+    fontSize: 18,
+    color: '#09355c',
+    marginTop: 10,
   },
   content: {
     flex: 1,
@@ -206,24 +171,18 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     color: '#333',
   },
-  button: {
+  buttonGeneral: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#09355c',
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  buttonDanger: {
-    backgroundColor: '#dc3545',
-  },
-  buttonText: {
-    color: '#fff',
+  buttonGeneralText: {
     fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
+    color: '#333',
+    marginLeft: 20,
+  }
 });
 
 export default SettingsScreen;

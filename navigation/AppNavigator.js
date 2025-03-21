@@ -9,7 +9,8 @@ import TrackWorkoutScreen from '../screens/TrackWorkoutScreen';
 import ProfileScreen from '../screens/ProfileScreen'; 
 import MyWorkoutScreen from '../screens/MyWorkoutScreen'; 
 import MyGoalsScreen from '../screens/MyGoalsScreen'; 
-
+import WorkoutsScreen from '../screens/WorkoutsScreen'; 
+import WorkoutPreferences from '../screens/WorkoutPreferences';
 
 
 const Stack = createNativeStackNavigator();
@@ -69,6 +70,16 @@ const AppNavigator = () => {
         name="MyGoalsScreen"
         component={MyGoalsScreen}
         options={{ title: 'My Goals Screen', headerBackVisible: false  }}
+      />
+      <Stack.Screen
+        name="Workouts"
+        component={WorkoutsScreen}
+        options={{ title: 'Workouts', headerBackVisible: false  }}
+      />
+      <Stack.Screen
+        name="WorkoutPreferences"
+        component={WorkoutPreferences}
+        options={{ title: 'Workout Preference', headerBackVisible: false  }}
       />
     </Stack.Navigator>
   );
