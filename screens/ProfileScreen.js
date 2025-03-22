@@ -79,9 +79,9 @@ export default function ProfileScreen() {
         {profile ? (
           <>
             <Text style={styles.contentText}>Name: {profile.Name}</Text>
-            <Text style={styles.contentText}>Email: {profile.Name}</Text>
-            <Text style={styles.contentText}>Height: {profile.Name}</Text>
-            <Text style={styles.contentText}>Weight: {profile.Name}</Text>
+            <Text style={styles.contentText}>Email: {profile.Email}</Text>
+            <Text style={styles.contentText}>Height: {profile.Height} Meters</Text>
+            <Text style={styles.contentText}>Weight: {profile.Weight} Pounds</Text>
           </>
         ) : (
           <Text>Loading profile...</Text>
