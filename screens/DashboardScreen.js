@@ -21,7 +21,7 @@ export default function DashboardScreen() {
     { title: "My Workout", icon: "heartbeat", navigateTo: "MyWorkout" },
     { title: "Track Workout", icon: "bar-chart", navigateTo: "TrackWorkout" },
     { title: "Nutrition", icon: "cutlery", navigateTo: "Nutrition" },
-    { title: "Profile", icon: "user", navigateTo: "Profile" }
+    { title: "My Activity", icon: "user", navigateTo: "MyActivity" }
   ];
 
   return (
@@ -46,10 +46,6 @@ export default function DashboardScreen() {
                 />
               ))}
             </View>
-
-            {/* User Stats */}
-            <Text style={styles.sectionTitle}>Your Stats</Text>
-            <UserStats />
 
             {/* Recommended Workouts */}
             <Text style={styles.sectionTitle}>Recommended Workouts:</Text>

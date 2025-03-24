@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Button, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Pedometer } from 'expo-sensors';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration, handleSubmit, isTracking, setIsTracking }) => {
     const lastStepCount = useRef(0);
@@ -8,12 +9,10 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
 
     useEffect(() => {
         if (isTracking) {
-            // Start Timer
             timerInterval.current = setInterval(() => {
                 setDuration((prevDuration) => prevDuration + 1);
             }, 1000);
 
-            // Start Step Tracking
             const subscribe = Pedometer.watchStepCount((result) => {
                 const newSteps = result.steps - lastStepCount.current;
                 if (newSteps > 0) {
@@ -32,7 +31,6 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
     }, [isTracking]);
 
     const toggleTracking = () => {
-        // setIsRunning(!isRunning);
         setIsTracking(!isTracking);
     };
 
@@ -41,14 +39,12 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
             "Restart Workout",
             "Are you sure you want to restart?",
             [
-                {
-                    text: "Yes", onPress: () => {
-                        setCurrentSteps(0);
-                        setDuration(0);
-                        setIsTracking(false);
-                        lastStepCount.current = 0;
-                    }
-                },
+                { text: "Yes", onPress: () => {
+                    setCurrentSteps(0);
+                    setDuration(0);
+                    setIsTracking(false);
+                    lastStepCount.current = 0;
+                } },
                 { text: "No", style: "cancel" }
             ],
             { cancelable: true }
@@ -56,7 +52,7 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
     };
 
     const calculateDistance = (steps) => {
-        const stepLength = 0.76; // Approximate step length in meters
+        const stepLength = 0.76;
         return (steps * stepLength).toFixed(2);
     };
 
@@ -74,19 +70,15 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
             <Text style={styles.distanceText}>Distance: {calculateDistance(currentSteps)} meters</Text>
 
             <View style={styles.buttonContainer}>
-                <Button
-                    title={isTracking ? "Pause" : "Start"}
-                    onPress={toggleTracking}
-                    color={isTracking ? "#FFA500" : "#4CAF50"}
-                />
-                <Button title="Restart" onPress={handleReset} color="#FF6347" />
-                <Button
-                    title="Save Workout"
-                    onPress={handleSubmit}
-                    color="#09355c"
-                    style={styles.saveButton}
-                />
-
+                <TouchableOpacity style={[styles.button, { backgroundColor: isTracking ? "#09355c" : "#09355c" }]} onPress={toggleTracking}>
+                    <FontAwesome5 name={isTracking ? "pause" : "play"} size={20} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.button, { backgroundColor: "#09355c" }]} onPress={handleReset}>
+                    <FontAwesome5 name="redo" size={20} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.button, { backgroundColor: "#09355c" }]} onPress={handleSubmit}>
+                    <FontAwesome5 name="save" size={20} color="#fff" />
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -96,30 +88,52 @@ const styles = StyleSheet.create({
     container: {
         marginBottom: 20,
         alignItems: 'center',
+        backgroundColor: '#ffffff',
+        padding: 20,
+        borderRadius: 15,
+        shadowColor: '#09355c',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 5 },
+        shadowRadius: 10,
+        borderWidth: 1,
+        borderColor: '#09355c',
     },
     header: {
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: 'bold',
+        color: '#09355c',
         marginBottom: 10,
     },
     stepsCount: {
-        fontSize: 16,
-        marginBottom: 12,
+        fontSize: 18,
+        color: '#09355c',
+        marginBottom: 10,
     },
     timerText: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 12,
+        color: '#09355c',
+        marginBottom: 10,
     },
     distanceText: {
-        fontSize: 16,
-        marginBottom: 12,
+        fontSize: 18,
+        color: '#09355c',
+        marginBottom: 10,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        width: '100%',
+        width: '80%',
         marginTop: 15,
+    },
+    button: {
+        padding: 15,
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 60,
+        height: 60,
+        elevation: 5,
     },
 });
 

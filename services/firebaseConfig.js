@@ -14,12 +14,12 @@ import {
 
 
 const firebaseConfig = {
-  apiKey: FIREBASE_API_KEY,
-  authDomain: FIREBASE_AUTH_DOMAIN,
-  projectId: FIREBASE_PROJECT_ID,
-  storageBucket: FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
-  appId: FIREBASE_APP_ID
+  apiKey: "AIzaSyBfIEMi8GHTL1qOjzMB17NIud2x2MUbi3U",
+  authDomain: "keanfit-7923d.firebaseapp.com",
+  projectId: "keanfit-7923d",
+  storageBucket: "keanfit-7923d.appspot.com",
+  messagingSenderId: "752185559064",
+  appId: "1:752185559064:ios:0273e3a7159dd045a01b6d"
 };
 
 
