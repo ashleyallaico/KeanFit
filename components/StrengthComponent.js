@@ -33,6 +33,18 @@ const StrengthComponent = ({
             <Text style={styles.title}>Strength Training</Text>
             
             <View style={styles.inputRow}>
+            <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        onChangeText={handleNumberInput(setSets)}
+                        value={sets}
+                        placeholder="Sets"
+                        placeholderTextColor="#09355c80"
+                        keyboardType="numeric"
+                    />
+                    <Text style={styles.label}>Sets</Text>
+                </View>
+
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -43,18 +55,6 @@ const StrengthComponent = ({
                         keyboardType="numeric"
                     />
                     <Text style={styles.label}>Reps</Text>
-                </View>
-                
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        onChangeText={handleNumberInput(setSets)}
-                        value={sets}
-                        placeholder="Sets"
-                        placeholderTextColor="#09355c80"
-                        keyboardType="numeric"
-                    />
-                    <Text style={styles.label}>Sets</Text>
                 </View>
                 
                 <View style={styles.inputContainer}>
