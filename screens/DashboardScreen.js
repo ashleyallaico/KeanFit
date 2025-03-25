@@ -21,7 +21,8 @@ export default function DashboardScreen() {
     { title: "My Workout", icon: "heartbeat", navigateTo: "MyWorkout" },
     { title: "Track Workout", icon: "bar-chart", navigateTo: "TrackWorkout" },
     { title: 'My goal', icon: 'trophy', navigateTo: 'MyGoalsScreen' },
-    { title: "My Activity", icon: "user", navigateTo: "MyActivity" }
+    { title: "My Activity", icon: "user", navigateTo: "MyActivity" },
+    { title: 'Step Tracking', icon: 'step', navigateTo: 'StepTracking' },
   ];
 
   return (
