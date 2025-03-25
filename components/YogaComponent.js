@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning }) => {
@@ -18,27 +18,16 @@ const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning 
         return () => clearInterval(intervalRef.current); 
     }, [isRunning, setTimer]);
 
-    const startTimer = () => {
-        if (!isRunning) {
-            setIsRunning(true);
-        }
-    };
-
-    const pauseTimer = () => {
-        setIsRunning(false);
-    };
-
+    const startTimer = () => setIsRunning(true);
+    const pauseTimer = () => setIsRunning(false);
+    
     const confirmReset = () => {
         Alert.alert(
             "Confirm Reset",
             "This will delete all recorded time permanently. Are you sure?",
             [
                 { text: "Cancel", style: "cancel" },
-                {
-                    text: "Reset",
-                    onPress: resetTimer,
-                    style: "destructive",
-                },
+                { text: "Reset", onPress: resetTimer, style: "destructive" },
             ]
         );
     };
@@ -49,17 +38,6 @@ const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning 
         clearInterval(intervalRef.current);
     };
 
-    // Custom Button component with border
-    const BorderedButton = ({ title, onPress, color }) => (
-        <View style={[styles.borderedButton, { borderColor: color }]}>
-            <Button 
-                title={title}
-                onPress={onPress}
-                color={color}
-            />
-        </View>
-    );
-
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Yoga Timer</Text>
@@ -68,18 +46,18 @@ const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning 
             </Text>
 
             <View style={styles.buttonContainer}>
-                <BorderedButton title="Start" onPress={startTimer} color="#09355c" />
-                <BorderedButton title="Pause" onPress={pauseTimer} color="#09355c" />
-                <BorderedButton title="Reset" onPress={confirmReset} color="#09355c" />
-            </View>
+                <TouchableOpacity style={styles.circleButton} onPress={startTimer}>
+                    <FontAwesome5 name="play" size={24} color="white" />
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSubmit}
-            >
-                <FontAwesome5 name="save" size={20} color="#fff" style={styles.saveIcon} />
-                <Text style={styles.saveText}>Save Session</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.circleButton} onPress={confirmReset}>
+                    <FontAwesome5 name="redo" size={24} color="white" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.circleButton} onPress={handleSubmit}>
+                    <FontAwesome5 name="save" size={24} color="white" />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -113,33 +91,21 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        width: '100%',
-        marginBottom: 20,
+        width: '80%',
     },
-    borderedButton: {
-        borderWidth: 2,
-        borderRadius: 10,
-        overflow: 'hidden',
-    },
-    saveButton: {
+    circleButton: {
         backgroundColor: '#09355c',
-        flexDirection: 'row',
-        paddingVertical: 12,
-        paddingHorizontal: 24,
+        width: 60,
+        height: 60,
         borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
         elevation: 5,
     },
-    saveText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16,
-        marginLeft: 8,
-    },
-    saveIcon: {
-        marginRight: 5,
-    }
 });
 
 export default YogaComponent;
