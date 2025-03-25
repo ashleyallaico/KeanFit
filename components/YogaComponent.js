@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning }) => {
-    const intervalRef = useRef(null); 
+    const intervalRef = useRef(null);
 
     useEffect(() => {
         if (isRunning) {
@@ -15,11 +15,10 @@ const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning 
             clearInterval(intervalRef.current);
         }
 
-        return () => clearInterval(intervalRef.current); 
+        return () => clearInterval(intervalRef.current);
     }, [isRunning, setTimer]);
 
-    const startTimer = () => setIsRunning(true);
-    const pauseTimer = () => setIsRunning(false);
+    const toggleTimer = () => setIsRunning((prev) => !prev);
     
     const confirmReset = () => {
         Alert.alert(
@@ -46,8 +45,8 @@ const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning 
             </Text>
 
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.circleButton} onPress={startTimer}>
-                    <FontAwesome5 name="play" size={24} color="white" />
+                <TouchableOpacity style={styles.circleButton} onPress={toggleTimer}>
+                    <FontAwesome5 name={isRunning ? "pause" : "play"} size={24} color="white" />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.circleButton} onPress={confirmReset}>
