@@ -1,8 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, ScrollView, StyleSheet } from 'react-native';
 import MultiSelect from 'react-native-multiple-select';
-import { fetchUserProfile, updateUserPreferences } from '../services/userService';
+import {
+  fetchUserProfile,
+  updateUserPreferences,
+} from '../services/userService';
 import { CATEGORIES } from '../constants/categories';
 import NavBar from '../components/NavBar';
 
@@ -20,25 +22,26 @@ export default function ProfileScreen() {
         setInitialPreferences(profileData.Preferences);
       }
     });
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, []);
 
   const handleSelectPreferences = (selectedItems) => {
     setSelectedPreferences(selectedItems);
-    setHasChanges(!arraysEqual(selectedItems, initialPreferences)); 
+    setHasChanges(!arraysEqual(selectedItems, initialPreferences));
   };
 
   const savePreferences = () => {
     updateUserPreferences(selectedPreferences)
       .then(() => {
         alert('Preferences updated successfully!');
-        setInitialPreferences([...selectedPreferences]); 
+        setInitialPreferences([...selectedPreferences]);
         setHasChanges(false);
       })
-      .catch((error) => alert('Failed to update preferences: ' + error.message));
+      .catch((error) =>
+        alert('Failed to update preferences: ' + error.message)
+      );
   };
 
-  
   const arraysEqual = (a, b) => {
     return a.length === b.length && a.every((val, index) => val === b[index]);
   };
@@ -49,7 +52,10 @@ export default function ProfileScreen() {
         {profile ? (
           <>
             <MultiSelect
-              items={CATEGORIES.map(category => ({ id: category, name: category }))}
+              items={CATEGORIES.map((category) => ({
+                id: category,
+                name: category,
+              }))}
               uniqueKey="id"
               onSelectedItemsChange={handleSelectPreferences}
               selectedItems={selectedPreferences}
@@ -67,13 +73,15 @@ export default function ProfileScreen() {
               submitButtonColor="#c00502"
               submitButtonText="Close Options"
             />
-            {hasChanges && <Button title="Save Preferences" onPress={savePreferences} />}
+            {hasChanges && (
+              <Button title="Save Preferences" onPress={savePreferences} />
+            )}
           </>
         ) : (
           <Text>Loading profile...</Text>
         )}
       </View>
-      <NavBar/>
+      <NavBar />
     </View>
   );
 }
@@ -104,5 +112,5 @@ const styles = StyleSheet.create({
   profileText: {
     fontSize: 16,
     marginBottom: 10,
-  }
+  },
 });

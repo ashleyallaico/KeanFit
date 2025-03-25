@@ -1,10 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation } from '@react-navigation/native';
 import UserStats from '../components/UserStats';
-import WorkoutRecommendations from '../components/WorkoutRecommendations';
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
@@ -18,10 +23,10 @@ export default function DashboardScreen() {
 
   // Data for FlatList (Quick Access Cards)
   const quickAccessData = [
-    { title: "My Workout", icon: "heartbeat", navigateTo: "MyWorkout" },
-    { title: "Track Workout", icon: "bar-chart", navigateTo: "TrackWorkout" },
-    { title: "My Goals", icon: "cutlery", navigateTo: "MyGoalsScreen" },
-    { title: "Profile", icon: "user", navigateTo: "Profile" }
+    { title: 'My Workout', icon: 'heartbeat', navigateTo: 'MyWorkout' },
+    { title: 'Track Workout', icon: 'bar-chart', navigateTo: 'TrackWorkout' },
+    { title: 'Nutrition', icon: 'cutlery', navigateTo: 'Nutrition' },
+    { title: 'Step Tracking', icon: 'step', navigateTo: 'StepTracking' },
   ];
 
   return (
@@ -32,7 +37,9 @@ export default function DashboardScreen() {
             {/* Header Section */}
             <View style={[styles.header, { alignItems: 'center' }]}>
               <Text style={styles.welcomeText}>Welcome to KEANFIT</Text>
-              <Text style={styles.subtitleText}>Your fitness journey starts here</Text>
+              <Text style={styles.subtitleText}>
+                Your fitness journey starts here
+              </Text>
             </View>
 
             {/* Quick Access Cards */}
@@ -51,9 +58,14 @@ export default function DashboardScreen() {
             <Text style={styles.sectionTitle}>Your Stats</Text>
             <UserStats />
 
-            {/* Recommended Workouts */}
-            <Text style={styles.sectionTitle}>Recommended Workouts:</Text>
-            <WorkoutRecommendations />
+            {/* Workouts Button */}
+            <TouchableOpacity
+              style={styles.workoutsButton}
+              onPress={() => navigation.navigate('Workouts')}
+            >
+              <Text style={styles.workoutsButtonText}>Browse Workouts</Text>
+              <FontAwesome name="arrow-right" size={16} color="#fff" />
+            </TouchableOpacity>
           </>
         }
         data={[]} // Empty data array since content is in ListHeaderComponent
@@ -75,7 +87,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#09355c',
     padding: 20,
-    paddingTop: 25,
+    paddingTop: 50,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -94,6 +106,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    paddingHorizontal: 15,
     marginTop: 20,
     marginBottom: 30,
   },
@@ -123,6 +136,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
-    marginLeft: 10,
+    marginLeft: 15,
+  },
+  workoutsButton: {
+    backgroundColor: '#09355c',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+    marginHorizontal: 15,
+    marginTop: 20,
+    marginBottom: 30,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  workoutsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
