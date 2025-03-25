@@ -1,7 +1,13 @@
-
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Button, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  ScrollView, 
+  TouchableOpacity, 
+  Alert 
+} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { getDatabase, ref, push, set, onValue, remove } from 'firebase/database';
@@ -9,6 +15,7 @@ import { auth } from '../services/firebaseConfig';
 import NavBar from '../components/NavBar';
 import { setupActivityListener } from '../services/fetchUserActivities';
 
+// Utility to parse dates in MM/DD/YYYY or ISO format
 const parseActivityDate = (dateStr) => {
   const parts = dateStr.split('/');
   if (parts.length === 3) {
@@ -18,19 +25,20 @@ const parseActivityDate = (dateStr) => {
 };
 
 const MyGoalsScreen = () => {
+  // States
   const [selectedCategory, setSelectedCategory] = useState('Select Goal');
   const [goalDeadline, setGoalDeadline] = useState(new Date());
+  const [cardioType, setCardioType] = useState('Steps');
   const [cardioSteps, setCardioSteps] = useState('');
   const [cardioDuration, setCardioDuration] = useState('');
   const [yogaDuration, setYogaDuration] = useState('');
   const [strengthSessions, setStrengthSessions] = useState('');
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [userGoals, setUserGoals] = useState([]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [sortOption, setSortOption] = useState('deadline');
   const [activities, setActivities] = useState({});
   const todayDate = new Date();
 
+  // Fetch goals from Firebase
   useEffect(() => {
     const fetchGoals = async () => {
       const db = getDatabase();
@@ -51,11 +59,13 @@ const MyGoalsScreen = () => {
     fetchGoals();
   }, []);
 
+  // Set up activity listener
   useEffect(() => {
     const unsubscribe = setupActivityListener(setActivities);
     return () => unsubscribe();
   }, []);
 
+  // Aggregate activity entries for a given goal
   const aggregateActivityForGoal = (goal, categoryActivities) => {
     let aggregated = { steps: 0, duration: 0, sessions: 0 };
 
@@ -73,7 +83,7 @@ const MyGoalsScreen = () => {
           aggregated.steps += Number(entry.steps) || 0;
           aggregated.duration += (Number(entry.cardioDuration) || 0) / 60;
         } else if (goal.category === 'Strength') {
-          aggregated.sessions += 1; // Count each log as a session
+          aggregated.sessions += 1;
         } else if (goal.category === 'Yoga') {
           aggregated.duration += (Number(entry.yogaDuration) || 0) / 60;
         }
@@ -82,11 +92,13 @@ const MyGoalsScreen = () => {
     return aggregated;
   };
 
+  // Check each goal's progress and mark complete if target is met
   useEffect(() => {
     if (!activities || userGoals.length === 0) return;
 
-    userGoals.forEach((goal) => {
-      if (!goal.completed) {
+    userGoals
+      .filter((goal) => !goal.completed)
+      .forEach((goal) => {
         const categoryActivities = activities[goal.category] || {};
         const aggregated = aggregateActivityForGoal(goal, categoryActivities);
 
@@ -109,25 +121,39 @@ const MyGoalsScreen = () => {
           meetsTarget = aggregated.duration >= targetDuration;
         }
 
-        if (meetsTarget) handleCompleteGoal(goal);
-      }
-    });
+        if (meetsTarget) {
+          handleCompleteGoal(goal);
+        }
+      });
   }, [userGoals, activities]);
 
+  // Validate and submit new goal to Firebase
   const handleSubmit = () => {
-    if (selectedCategory === 'Select Goal') return alert("Please select a valid goal category.");
-    if (selectedCategory === 'Cardio') {
-      const hasSteps = cardioSteps.trim() !== '';
-      const hasDuration = cardioDuration.trim() !== '';
-      if ((hasSteps && hasDuration) || (!hasSteps && !hasDuration)) {
-        return alert("Please provide either steps OR duration for Cardio — not both.");
+    const errors = [];
+
+    if (selectedCategory === 'Select Goal') {
+      errors.push("Please select a valid goal category.");
+    } else {
+      if (selectedCategory === 'Cardio') {
+        if (cardioType === 'Steps' && cardioSteps.trim() === '') {
+          errors.push("Please enter steps.");
+        }
+        if (cardioType === 'Duration' && cardioDuration.trim() === '') {
+          errors.push("Please enter duration.");
+        }
       }
-      return alert("Please provide either steps or duration for Cardio.");
+      if (selectedCategory === 'Strength' && strengthSessions.trim() === '') {
+        errors.push("Please specify the number of Strength sessions.");
+      }
+      if (selectedCategory === 'Yoga' && yogaDuration.trim() === '') {
+        errors.push("Please specify the Yoga duration.");
+      }
     }
-    if (selectedCategory === 'Strength' && strengthSessions.trim() === '')
-      return alert("Please specify the number of Strength sessions.");
-    if (selectedCategory === 'Yoga' && yogaDuration.trim() === '')
-      return alert("Please specify the Yoga duration.");
+
+    if (errors.length > 0) {
+      Alert.alert("Validation Error", errors.join('\n'));
+      return;
+    }
 
     const db = getDatabase();
     const user = auth.currentUser;
@@ -142,7 +168,11 @@ const MyGoalsScreen = () => {
 
       switch (selectedCategory) {
         case 'Cardio':
-          goalData = { ...goalData, cardioSteps, cardioDuration };
+          if (cardioType === 'Steps') {
+            goalData = { ...goalData, cardioSteps };
+          } else {
+            goalData = { ...goalData, cardioDuration };
+          }
           break;
         case 'Strength':
           goalData = { ...goalData, strengthSessions };
@@ -157,16 +187,17 @@ const MyGoalsScreen = () => {
 
       set(newGoalRef, goalData)
         .then(() => {
-          alert('Goal saved successfully!');
+          Alert.alert('Success', 'Goal saved successfully!');
           resetForm();
         })
         .catch((error) => {
           console.error("Failed to save goal data: ", error);
-          alert('Failed to save goal. Please try again.');
+          Alert.alert('Error', 'Failed to save goal. Please try again.');
         });
     }
   };
 
+  // Reset all form fields
   const resetForm = () => {
     setSelectedCategory('Select Goal');
     setGoalDeadline(new Date());
@@ -177,11 +208,13 @@ const MyGoalsScreen = () => {
     setShowGoalForm(false);
   };
 
+  // Date picker handler
   const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) setGoalDeadline(selectedDate);
+    if (event.type === 'dismissed') return;
+    setGoalDeadline(selectedDate || goalDeadline);
   };
 
+  // Delete goal with confirmation
   const handleDeleteGoal = (goalId) => {
     Alert.alert(
       'Delete Goal',
@@ -197,10 +230,10 @@ const MyGoalsScreen = () => {
             if (user) {
               const goalRef = ref(db, `Users/${user.uid}/Goals/${goalId}`);
               remove(goalRef)
-                .then(() => alert('Goal deleted successfully!'))
+                .then(() => Alert.alert('Success', 'Goal deleted successfully!'))
                 .catch((error) => {
                   console.error('Error deleting goal: ', error);
-                  alert('Error deleting goal. Please try again.');
+                  Alert.alert('Error', 'Error deleting goal. Please try again.');
                 });
             }
           },
@@ -210,6 +243,7 @@ const MyGoalsScreen = () => {
     );
   };
 
+  // Mark a goal as complete
   const handleCompleteGoal = (goal) => {
     const db = getDatabase();
     const user = auth.currentUser;
@@ -223,6 +257,7 @@ const MyGoalsScreen = () => {
     }
   };
 
+  // Group goals by category for display
   const groupedGoals = userGoals.reduce((acc, goal) => {
     const cat = goal.category;
     if (!acc[cat]) acc[cat] = [];
@@ -230,6 +265,7 @@ const MyGoalsScreen = () => {
     return acc;
   }, {});
 
+  // Compute goal status based on deadline and completion
   const computeGoalStatus = (goal) => {
     if (goal.completed) return 'Complete';
     const currentDate = new Date();
@@ -241,12 +277,29 @@ const MyGoalsScreen = () => {
     return 'Past Due';
   };
 
+  // Render Cardio input tabs (Steps vs Duration)
+  const renderCardioTabs = () => (
+    <View style={styles.tabContainer}>
+      {['Steps', 'Duration'].map((tab) => (
+        <TouchableOpacity
+          key={tab}
+          style={[styles.tab, cardioType === tab && styles.activeTab]}
+          onPress={() => setCardioType(tab)}
+        >
+          <Text style={[styles.tabText, cardioType === tab && styles.activeTabText]}>{tab}</Text>
+          {cardioType === tab && <View style={styles.activeIndicator} />}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
         <TouchableOpacity
           style={styles.createGoalButton}
-          onPress={() => setShowGoalForm(!showGoalForm)}>
+          onPress={() => setShowGoalForm(!showGoalForm)}
+        >
           <Text style={styles.createGoalButtonText}>
             {showGoalForm ? 'Cancel' : 'Create a New Goal'}
           </Text>
@@ -258,8 +311,9 @@ const MyGoalsScreen = () => {
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={selectedCategory}
-                onValueChange={setSelectedCategory}
-                style={styles.picker}>
+                onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+                style={styles.picker}
+              >
                 <Picker.Item label="Select Goal" value="Select Goal" />
                 <Picker.Item label="Cardio" value="Cardio" />
                 <Picker.Item label="Strength Training" value="Strength" />
@@ -270,29 +324,24 @@ const MyGoalsScreen = () => {
             <View style={styles.formContainer}>
               {selectedCategory === 'Cardio' && (
                 <View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Steps (optional)"
-                    value={cardioSteps}
-                    onChangeText={(text) => {
-                      setCardioSteps(text);
-                      if (text) setCardioDuration('');
-                    }}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Duration in minutes (optional)"
-                    value={cardioDuration}
-                    onChangeText={(text) => {
-                      setCardioDuration(text);
-                      if (text) setCardioSteps('');
-                    }}
-                    keyboardType="numeric"
-                  />
-                  <Text style={{ color: '#777', marginBottom: 10 }}>
-                    * Enter either steps OR duration, not both.
-                  </Text>
+                  {renderCardioTabs()}
+                  {cardioType === 'Steps' ? (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter steps"
+                      value={cardioSteps}
+                      onChangeText={setCardioSteps}
+                      keyboardType="numeric"
+                    />
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter duration in minutes"
+                      value={cardioDuration}
+                      onChangeText={setCardioDuration}
+                      keyboardType="numeric"
+                    />
+                  )}
                 </View>
               )}
 
@@ -326,14 +375,16 @@ const MyGoalsScreen = () => {
                   onChange={handleDateChange}
                 />
               </View>
-              <Button title="Save Goal" onPress={handleSubmit} />
+              <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
+                <Text style={styles.buttonText}>Save Goal</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
 
         <View style={styles.existingGoalsContainer}>
           {Object.keys(groupedGoals).length === 0 ? (
-            <Text>No goals set yet.</Text>
+            <Text style={styles.noGoalsText}>No goals set yet.</Text>
           ) : (
             Object.entries(groupedGoals).map(([category, goals]) => (
               <View key={category}>
@@ -344,8 +395,9 @@ const MyGoalsScreen = () => {
                     <View key={goal.id} style={styles.goalItem}>
                       <Text style={styles.goalText}>{goal.category} Goal</Text>
                       <Text style={styles.goalStatus}>{computeGoalStatus(goal)}</Text>
-                      <Text>Deadline: {new Date(goal.deadline).toLocaleDateString()}</Text>
-
+                      <Text style={styles.deadlineText}>
+                        Deadline: {new Date(goal.deadline).toLocaleDateString()}
+                      </Text>
                       {goal.category === 'Cardio' && (
                         <Text style={styles.progressText}>
                           Steps: {aggregated.steps} / {goal.cardioSteps || '—'} | Duration: {aggregated.duration.toFixed(1)} / {goal.cardioDuration || '—'} mins
@@ -362,9 +414,13 @@ const MyGoalsScreen = () => {
                         </Text>
                       )}
                       {!goal.completed && (
-                        <Button title="Mark as Complete" onPress={() => handleCompleteGoal(goal)} />
+                        <TouchableOpacity style={styles.completeButton} onPress={() => handleCompleteGoal(goal)}>
+                          <Text style={styles.buttonText}>Mark as Complete</Text>
+                        </TouchableOpacity>
                       )}
-                      <Button title="Delete Goal" onPress={() => handleDeleteGoal(goal.id)} />
+                      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteGoal(goal.id)}>
+                        <Text style={styles.buttonText}>Delete Goal</Text>
+                      </TouchableOpacity>
                     </View>
                   );
                 })}
@@ -379,46 +435,171 @@ const MyGoalsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContainer: { paddingBottom: 70 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f9f9f9',
+  },
+  scrollContainer: {
+    paddingBottom: 90,
+    paddingHorizontal: 15,
+  },
   createGoalButton: {
     backgroundColor: '#09355c',
-    padding: 10,
-    borderRadius: 5,
-    margin: 10,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 15,
+    marginBottom: 25,
+    alignItems: 'center',
   },
-  createGoalButtonText: { color: 'white', textAlign: 'center', fontSize: 18 },
+  createGoalButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
   goalContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    elevation: 5,
+    marginBottom: 25,
+    padding: 15,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
   },
-  header: { fontSize: 22, fontWeight: 'bold', color: '#09355c', marginBottom: 10 },
+  header: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#09355c',
+    marginBottom: 15,
+  },
+  pickerContainer: {
+    backgroundColor: '#f0f0f0',
+    borderRadius: 6,
+    marginBottom: 15,
+  },
+  picker: {
+    width: '100%',
+  },
+  formContainer: {
+    marginBottom: 10,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 12,
     backgroundColor: '#fff',
   },
-  pickerContainer: { marginBottom: 20 },
-  formContainer: { marginBottom: 20 },
-  dateFieldContainer: { marginBottom: 15 },
-  dateLabel: { fontSize: 16 },
-  goalItem: {
-    padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
-    marginVertical: 5,
+  dateFieldContainer: {
+    marginBottom: 15,
   },
-  goalText: { fontSize: 18, fontWeight: 'bold' },
-  goalStatus: { fontSize: 14, fontStyle: 'italic' },
-  progressText: { marginTop: 5, fontSize: 16, color: '#09355c' },
-  existingGoalsContainer: { margin: 10 },
+  dateLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#09355c',
+    marginBottom: 5,
+  },
+  saveButton: {
+    backgroundColor: '#09355c',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  existingGoalsContainer: {
+    marginBottom: 30,
+  },
+  noGoalsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginVertical: 15,
+  },
+  goalItem: {
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    borderLeftWidth: 6,
+    borderLeftColor: '#09355c',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  goalText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#09355c',
+    marginBottom: 4,
+  },
+  goalStatus: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    fontStyle: 'italic',
+    marginBottom: 6,
+  },
+  deadlineText: {
+    fontSize: 14,
+    color: '#444',
+    marginBottom: 6,
+  },
+  progressText: {
+    fontSize: 15,
+    color: '#0c4f8a',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  completeButton: {
+    backgroundColor: '#4caf50',
+    marginTop: 5,
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#d32f2f',
+    marginTop: 5,
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    justifyContent: 'space-around',
+  },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: '#e5e5e5',
+  },
+  activeTab: {
+    backgroundColor: '#09355c',
+  },
+  tabText: {
+    color: '#09355c',
+    fontWeight: '600',
+  },
+  activeTabText: {
+    color: '#fff',
+  },
+  activeIndicator: {
+    marginTop: 4,
+    height: 3,
+    backgroundColor: '#fff',
+    borderRadius: 2,
+  },
 });
 
 export default MyGoalsScreen;
-
