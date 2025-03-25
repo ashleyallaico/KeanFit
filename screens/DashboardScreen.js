@@ -1,15 +1,10 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native'; 
 import UserStats from '../components/UserStats';
+import WorkoutRecommendations from '../components/WorkoutRecommendations';
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
@@ -23,10 +18,14 @@ export default function DashboardScreen() {
 
   // Data for FlatList (Quick Access Cards)
   const quickAccessData = [
-    { title: 'My Workout', icon: 'heartbeat', navigateTo: 'MyWorkout' },
-    { title: 'Track Workout', icon: 'bar-chart', navigateTo: 'TrackWorkout' },
+    // { title: 'My Workout', icon: 'heartbeat', navigateTo: 'MyWorkout' },
+    // { title: 'Track Workout', icon: 'bar-chart', navigateTo: 'TrackWorkout' },
+    // { title: 'My goal', icon: 'cutlery', navigateTo: 'MyGoalsScreen' },
+    // { title: 'Step Tracking', icon: 'step', navigateTo: 'StepTracking' },
+    { title: "My Workout", icon: "heartbeat", navigateTo: "MyWorkout" },
+    { title: "Track Workout", icon: "bar-chart", navigateTo: "TrackWorkout" },
     { title: 'My goal', icon: 'cutlery', navigateTo: 'MyGoalsScreen' },
-    { title: 'Step Tracking', icon: 'step', navigateTo: 'StepTracking' },
+    { title: "My Activity", icon: "user", navigateTo: "MyActivity" }
   ];
 
   return (
@@ -54,18 +53,9 @@ export default function DashboardScreen() {
               ))}
             </View>
 
-            {/* User Stats */}
-            <Text style={styles.sectionTitle}>Your Stats</Text>
-            <UserStats />
-
-            {/* Workouts Button */}
-            <TouchableOpacity
-              style={styles.workoutsButton}
-              onPress={() => navigation.navigate('Workouts')}
-            >
-              <Text style={styles.workoutsButtonText}>Browse Workouts</Text>
-              <FontAwesome name="arrow-right" size={16} color="#fff" />
-            </TouchableOpacity>
+            {/* Recommended Workouts */}
+            <Text style={styles.sectionTitle}>Recommended Workouts:</Text>
+            <WorkoutRecommendations />
           </>
         }
         data={[]} // Empty data array since content is in ListHeaderComponent
