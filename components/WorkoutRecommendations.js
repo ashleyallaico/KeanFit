@@ -3,6 +3,8 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native
 import { getDatabase, ref, onValue, set, get } from 'firebase/database';
 import { auth } from '../services/firebaseConfig'; 
 import { fetchUserPreferences } from '../services/userService';
+import { FontAwesome } from '@expo/vector-icons';
+
 
 const WorkoutRecommendations = () => {
     const [preferences, setPreferences] = useState([]);
@@ -88,31 +90,63 @@ const WorkoutRecommendations = () => {
                 const updatedWorkouts = [...currentWorkouts, workout];
                 await set(userWorkoutsRef, updatedWorkouts);
                 setUserWorkouts(updatedWorkouts); 
-                console.log(`Workout added: ${workout.name}`);
+                alert(`Workout added: ${workout.name}`);
             } else {
                 console.log(`Workout "${workout.name}" is already in the list`);
             }
         } catch (error) {
-            console.error("Failed to add workout:", error);
+            alert("Failed to add workout:", error);
         }
     };
 
     const renderItem = ({ item }) => {
         const isExpanded = expandedWorkout === item.name;
         const isAlreadySaved = Array.isArray(userWorkouts) && userWorkouts.some((w) => w.name === item.name);
-
+    
         return (
-            <View style={styles.item}>
-                {/* Exercise Name */}
-                <TouchableOpacity onPress={() => setExpandedWorkout(isExpanded ? null : item.name)}>
-                    <Text style={styles.title}>{item.name}</Text>
-                </TouchableOpacity>
-
-                {/* Always Show Description */}
-                {item.description && <Text style={styles.description}>Description: {item.description}</Text>}
-
-                {/* Show Difficulty when expanded */}
-                {isExpanded && item.difficulty && <Text>Difficulty: {item.difficulty}</Text>}
+          <TouchableOpacity
+            style={styles.workoutCard}
+            onPress={() => setExpandedWorkout(isExpanded ? null : item.name)}
+          >
+            <View style={styles.cardHeader}>
+              <Text style={styles.workoutTitle}>{item.name}</Text>
+              <FontAwesome
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color="#09355c"
+              />
+            </View>
+    
+            {/* Fix: Display the Description properly */}
+            <Text style={styles.workoutDescription}>{item.Description}</Text>
+    
+            {isExpanded && (
+              <View style={styles.expandedContent}>
+                <View style={styles.workoutDetail}>
+                  <Text style={styles.detailLabel}>Category:</Text>
+                  <Text style={styles.detailValue}>{item.Category}</Text>
+                </View>
+    
+                <View style={styles.workoutDetail}>
+                  <Text style={styles.detailLabel}>Equipment:</Text>
+                  {/* Fix: Display the Equipment properly */}
+                  <Text style={styles.detailValue}>{item.Equipment}</Text>
+                </View>
+    
+                <View style={styles.workoutDetail}>
+                  <Text style={styles.detailLabel}>Difficulty:</Text>
+                  <View style={styles.difficultyContainer}>
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <FontAwesome
+                        key={level}
+                        name="circle"
+                        size={12}
+                        color={level <= item.difficulty ? '#09355c' : '#e0e0e0'}
+                        style={{ marginRight: 5 }}
+                      />
+                    ))}
+                  </View>
+                </View>
 
                 {/* Show "Add Workout" Button if not already saved */}
                 {isExpanded && !isAlreadySaved && (
@@ -120,14 +154,13 @@ const WorkoutRecommendations = () => {
                         <Text style={styles.addButtonText}>Add Workout to My List</Text>
                     </TouchableOpacity>
                 )}
-
-                {/* Show More / Show Less Button */}
-                <TouchableOpacity onPress={() => setExpandedWorkout(isExpanded ? null : item.name)}>
-                    <Text style={styles.showMore}>{isExpanded ? "Show Less" : "Show More"}</Text>
-                </TouchableOpacity>
-            </View>
+              </View>
+            )}
+          </TouchableOpacity>
         );
-    };
+      };
+
+    
 
     return (
         <FlatList
@@ -142,15 +175,20 @@ const WorkoutRecommendations = () => {
 
 const styles = StyleSheet.create({
     item: {
-        backgroundColor: '#f9c2ff',
-        padding: 20,
-        marginVertical: 8,
-        marginHorizontal: 16,
-        borderRadius: 8,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
     },
     title: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
+        color: '#09355c',
     },
     description: {
         marginTop: 5,
@@ -173,6 +211,59 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
     },
+    workoutCard: {
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+      },
+      cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+      },
+      workoutTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#09355c',
+      },
+      workoutDescription: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 10,
+      },
+      expandedContent: {
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+        paddingTop: 10,
+        marginTop: 5,
+      },
+      workoutDetail: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+      },
+      detailLabel: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+        width: 90,
+      },
+      detailValue: {
+        fontSize: 14,
+        color: '#666',
+        flex: 1,
+      },
+      difficultyContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+      },
 });
 
 export default WorkoutRecommendations;

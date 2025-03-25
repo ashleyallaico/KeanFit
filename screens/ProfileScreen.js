@@ -19,6 +19,29 @@ export default function ProfileScreen() {
     return () => unsubscribe(); 
   }, []);
 
+  const confirmLogout = () => {
+    Alert.alert(
+      "Confirm Logout", 
+      "Are you sure you want to log out?", 
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", onPress: handleLogout }
+      ]
+    );
+  };
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      Alert.alert('Logout Failed', error.message);
+    }
+  };
+
   const disableAccount = () => {
     Alert.alert(
       'Disable Account',
@@ -94,89 +117,7 @@ export default function ProfileScreen() {
               onPress={() => navigation.navigate('UpdatePassword')}
             >
               <FontAwesome name="lock" size={20} color="#fff" />
-              <Text style={styles.buttonText}>
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              
-              Update Password</Text>
+              <Text style={styles.buttonText}>Update Password</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -185,6 +126,14 @@ export default function ProfileScreen() {
             >
               <FontAwesome name="user-times" size={20} color="#fff" />
               <Text style={styles.buttonText}>Disable Account</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={confirmLogout}
+            >
+              <FontAwesome name="sign-out" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Logout</Text>
             </TouchableOpacity>
         </View>
     </View>

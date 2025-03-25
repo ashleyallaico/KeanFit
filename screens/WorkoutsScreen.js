@@ -22,6 +22,7 @@ export default function WorkoutsScreen() {
   const [activeSection, setActiveSection] = useState('Cardio');
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [expandedWorkout, setExpandedWorkout] = useState(null);
+  const [userWorkouts, setUserWorkouts] = useState([]); 
 
   useEffect(() => {
     const db = getDatabase();
@@ -74,14 +75,40 @@ export default function WorkoutsScreen() {
             });
           });
         });
-
         setWorkoutSections(sections);
       }
     });
   }, []);
 
+  const handleAddWorkout = async (workout) => {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("User not authenticated");
+        return;
+    }
+
+    const db = getDatabase();
+    const userWorkoutsRef = ref(db, `Users/${user.uid}/MyWorkout`);
+
+    try {
+        const currentWorkouts = Array.isArray(userWorkouts) ? userWorkouts : [];
+
+        if (!currentWorkouts.some((w) => w.name === workout.name)) {
+            const updatedWorkouts = [...currentWorkouts, workout];
+            await set(userWorkoutsRef, updatedWorkouts);
+            setUserWorkouts(updatedWorkouts); 
+            alert(`Workout added: ${workout.name}`);
+        } else {
+            console.log(`Workout "${workout.name}" is already in the list`);
+        }
+    } catch (error) {
+        alert("Failed to add workout:", error);
+    }
+  };
+
   const renderWorkoutCard = ({ item }) => {
     const isExpanded = expandedWorkout === item.name;
+    const isAlreadySaved = Array.isArray(userWorkouts) && userWorkouts.some((w) => w.name === item.name);
 
     return (
       <TouchableOpacity
@@ -127,6 +154,11 @@ export default function WorkoutsScreen() {
                 ))}
               </View>
             </View>
+            {isExpanded && !isAlreadySaved && (
+                <TouchableOpacity style={styles.addButton} onPress={() => handleAddWorkout(item)}>
+                    <Text style={styles.addButtonText}>Add Workout to My List</Text>
+                </TouchableOpacity>
+            )}
           </View>
         )}
       </TouchableOpacity>
@@ -221,7 +253,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#09355c',
     padding: 20,
-    paddingTop: 50,
+    paddingTop: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -261,7 +293,7 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   recommendationTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#09355c',
   },
@@ -290,7 +322,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#09355c',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '600',
     color: '#666',
   },
@@ -353,5 +385,16 @@ const styles = StyleSheet.create({
   difficultyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  addButton: {
+    marginTop: 10,
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  addButtonText: {
+      color: 'white',
+      fontWeight: 'bold',
   },
 });

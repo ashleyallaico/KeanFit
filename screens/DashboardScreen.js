@@ -3,8 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
 import { useNavigation } from '@react-navigation/native'; 
-import UserStats from '../components/UserStats';
-import WorkoutRecommendations from '../components/WorkoutRecommendations';
 
 export default function DashboardScreen() {
   const navigation = useNavigation();
@@ -52,10 +50,6 @@ export default function DashboardScreen() {
                 />
               ))}
             </View>
-
-            {/* Recommended Workouts */}
-            <Text style={styles.sectionTitle}>Recommended Workouts:</Text>
-            <WorkoutRecommendations />
           </>
         }
         data={[]} // Empty data array since content is in ListHeaderComponent
@@ -77,7 +71,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#09355c',
     padding: 20,
-    paddingTop: 50,
+    paddingTop: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
