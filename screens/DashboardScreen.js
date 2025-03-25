@@ -16,14 +16,11 @@ export default function DashboardScreen() {
 
   // Data for FlatList (Quick Access Cards)
   const quickAccessData = [
-    // { title: 'My Workout', icon: 'heartbeat', navigateTo: 'MyWorkout' },
-    // { title: 'Track Workout', icon: 'bar-chart', navigateTo: 'TrackWorkout' },
-    // { title: 'My goal', icon: 'cutlery', navigateTo: 'MyGoalsScreen' },
-    // { title: 'Step Tracking', icon: 'step', navigateTo: 'StepTracking' },
     { title: "My Workout", icon: "heartbeat", navigateTo: "MyWorkout" },
     { title: "Track Workout", icon: "bar-chart", navigateTo: "TrackWorkout" },
     { title: 'Fitness Goal', icon: 'trophy', navigateTo: 'MyGoalsScreen' },
-    { title: "View Activity", icon: "user", navigateTo: "MyActivity" }
+    { title: "View Activity", icon: "user", navigateTo: "MyActivity" },
+    { title: 'Step Tracking', icon: 'step', navigateTo: 'StepTracking' },
   ];
 
   return (
