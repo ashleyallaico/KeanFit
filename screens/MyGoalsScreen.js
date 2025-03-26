@@ -405,9 +405,6 @@ const MyGoalsScreen = () => {
                           : `Duration: ${aggregated.duration.toFixed(1)} / ${goal.cardioDuration} mins`
                         }
                       </Text>
-                        // <Text style={styles.progressText}>
-                        //   Steps: {aggregated.steps} / {goal.cardioSteps || '—'} | Duration: {aggregated.duration.toFixed(1)} / {goal.cardioDuration || '—'} mins
-                        // </Text>
                       )}
                       {goal.category === 'Strength' && (
                         <Text style={styles.progressText}>

@@ -11,7 +11,7 @@ const MyStepsScreen = () => {
   const [isTracking, setIsTracking] = useState(false);
   const lastStepCount = useRef(0);
   const timerInterval = useRef(null);
-  const currentDate = useRef(new Date().toISOString().split('T')[0]); // Format: YYYY-MM-DD
+  const currentDate = useRef(new Date().toISOString().split('T')[0]); 
 
   useEffect(() => {
     // Load previous step data from AsyncStorage on first render

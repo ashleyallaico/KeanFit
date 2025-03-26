@@ -498,6 +498,7 @@ export default function ProfileScreen() {
                   keyboardType="numeric"
                 />
                 <TextInput
+                 
                   style={styles.input}
                   placeholder="Enter new weight (pounds)"
                   value={weight}

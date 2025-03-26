@@ -50,7 +50,7 @@ export default function DashboardScreen() {
           </>
         }
         data={[]} // Empty data array since content is in ListHeaderComponent
-        renderItem={null} // No default rendering needed
+        renderItem={null} 
         keyExtractor={(_, index) => index.toString()}
         showsVerticalScrollIndicator={false}
       />
