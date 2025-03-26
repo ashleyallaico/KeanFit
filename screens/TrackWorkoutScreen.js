@@ -77,7 +77,7 @@ const TrackWorkoutScreen = () => {
         <View style={styles.container}>
             <ScrollView style={styles.scrollContainer}>
                 <View style={styles.trackingContainer}>
-                    <Text style={styles.header}>Track Your Workout</Text>
+                    <Text style={styles.header}>Select a workout to track</Text>
                     <View style={styles.pickerContainer}>
                         <Picker
                             selectedValue={selectedCategory}
@@ -91,9 +91,7 @@ const TrackWorkoutScreen = () => {
                     </View>
 
                     <View style={styles.formContainer}>
-                        {selectedCategory === 'Select Workout' && (
-                            <Text style={styles.header}>Please Select a Workout to track</Text>
-                        )}
+                        {selectedCategory === 'Select Workout'}
                         {selectedCategory === 'Cardio' && (
                             <View>
                                 <CardioComponent

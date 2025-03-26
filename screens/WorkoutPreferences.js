@@ -51,6 +51,7 @@ export default function ProfileScreen() {
       <View style={styles.profileContainer}>
         {profile ? (
           <>
+            <Text style={styles.label}>Select Your Preference</Text>
             <MultiSelect
               items={CATEGORIES.map((category) => ({
                 id: category,
@@ -60,7 +61,7 @@ export default function ProfileScreen() {
               onSelectedItemsChange={handleSelectPreferences}
               selectedItems={selectedPreferences}
               selectText="Pick Preferences"
-              searchInputPlaceholderText="Search Preferences..."
+              //searchInputPlaceholderText="Search Preferences..."
               altFontFamily="ProximaNova-Light"
               tagRemoveIconColor="#CCC"
               tagBorderColor="#CCC"
@@ -69,7 +70,7 @@ export default function ProfileScreen() {
               selectedItemIconColor="#CCC"
               itemTextColor="#000"
               displayKey="name"
-              searchInputStyle={{ color: '#CCC' }}
+              //searchInputStyle={{ color: '#CCC' }}
               submitButtonColor="#c00502"
               submitButtonText="Close Options"
             />
@@ -112,5 +113,10 @@ const styles = StyleSheet.create({
   profileText: {
     fontSize: 16,
     marginBottom: 10,
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#09355c',
   },
 });

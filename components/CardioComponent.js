@@ -66,8 +66,8 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
         <View style={styles.container}>
             <Text style={styles.header}>Cardio Workout</Text>
             <Text style={styles.stepsCount}>Steps: {currentSteps}</Text>
-            <Text style={styles.timerText}>Time: {formatTime(duration)}</Text>
             <Text style={styles.distanceText}>Distance: {calculateDistance(currentSteps)} meters</Text>
+            <Text style={styles.timerText}>Time: {formatTime(duration)}</Text>
 
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={[styles.button, { backgroundColor: isTracking ? "#09355c" : "#09355c" }]} onPress={toggleTracking}>

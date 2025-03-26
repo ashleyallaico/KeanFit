@@ -177,8 +177,10 @@ export default function WorkoutsScreen() {
     <>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Workouts</Text>
-        <Text style={styles.headerSubtitle}>Find the perfect workout for you</Text>
+        <Text style={styles.headerTitle}>View Workouts</Text>
+        <Text style={styles.headerSubtitle}>
+          Find the perfect workout for you
+        </Text>
       </View>
 
       {/* Recommendation Card */}

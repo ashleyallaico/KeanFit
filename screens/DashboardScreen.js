@@ -18,9 +18,9 @@ export default function DashboardScreen() {
   const quickAccessData = [
     { title: "My Workout", icon: "heartbeat", navigateTo: "MyWorkout" },
     { title: "Track Workout", icon: "bar-chart", navigateTo: "TrackWorkout" },
-    { title: 'My goal', icon: 'trophy', navigateTo: 'MyGoalsScreen' },
-    { title: "My Activity", icon: "user", navigateTo: "MyActivity" },
-    { title: 'Step Tracking', icon: "step", navigateTo: 'StepTracking' },
+    { title: 'Fitness Goals', icon: 'trophy', navigateTo: 'MyGoalsScreen' },
+    { title: "View Activities", icon: "user", navigateTo: "MyActivity" },
+    { title: 'Step Tracking', icon: 'road', navigateTo: 'StepTracking' },
   ];
 
   return (

@@ -95,7 +95,7 @@ const WorkoutRecommendations = () => {
                 console.log(`Workout "${workout.name}" is already in the list`);
             }
         } catch (error) {
-            alert("Failed to add workout:", error);
+            console.error("Failed to add workout:", error);
         }
     };
 
