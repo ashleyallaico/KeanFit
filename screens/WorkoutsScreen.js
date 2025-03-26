@@ -5,11 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  ScrollView,
   SafeAreaView,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, set } from 'firebase/database';
 import NavBar from '../components/NavBar';
 import WorkoutRecommendations from '../components/WorkoutRecommendations';
 
@@ -22,7 +21,7 @@ export default function WorkoutsScreen() {
   const [activeSection, setActiveSection] = useState('Cardio');
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [expandedWorkout, setExpandedWorkout] = useState(null);
-  const [userWorkouts, setUserWorkouts] = useState([]); 
+  const [userWorkouts, setUserWorkouts] = useState([]);
 
   useEffect(() => {
     const db = getDatabase();
@@ -40,8 +39,6 @@ export default function WorkoutsScreen() {
         // Process the data to match our structure
         Object.keys(data).forEach((sectionKey) => {
           const sectionData = data[sectionKey];
-
-          // Map section keys to our display names
           let sectionName;
           if (sectionKey.toLowerCase() === 'cardio') {
             sectionName = 'Cardio';
@@ -53,18 +50,13 @@ export default function WorkoutsScreen() {
           } else if (sectionKey.toLowerCase() === 'yoga') {
             sectionName = 'Yoga';
           } else {
-            return; // Skip unknown sections
+            return;
           }
-
-          // Format workout data
           Object.keys(sectionData).forEach((workoutKey) => {
             const workout = sectionData[workoutKey];
-
-            // Fix: Correctly access description and equipment fields
-            // Maintain consistent casing with MyWorkoutScreen
             sections[sectionName].push({
               name: workoutKey,
-              Category: sectionName, // Use capital letter for consistency with MyWorkoutScreen
+              Category: sectionName,
               Description:
                 workout.Description ||
                 workout.description ||
@@ -83,26 +75,25 @@ export default function WorkoutsScreen() {
   const handleAddWorkout = async (workout) => {
     const user = auth.currentUser;
     if (!user) {
-        console.error("User not authenticated");
-        return;
+      console.error("User not authenticated");
+      return;
     }
 
     const db = getDatabase();
     const userWorkoutsRef = ref(db, `Users/${user.uid}/MyWorkout`);
 
     try {
-        const currentWorkouts = Array.isArray(userWorkouts) ? userWorkouts : [];
-
-        if (!currentWorkouts.some((w) => w.name === workout.name)) {
-            const updatedWorkouts = [...currentWorkouts, workout];
-            await set(userWorkoutsRef, updatedWorkouts);
-            setUserWorkouts(updatedWorkouts); 
-            alert(`Workout added: ${workout.name}`);
-        } else {
-            console.log(`Workout "${workout.name}" is already in the list`);
-        }
+      const currentWorkouts = Array.isArray(userWorkouts) ? userWorkouts : [];
+      if (!currentWorkouts.some((w) => w.name === workout.name)) {
+        const updatedWorkouts = [...currentWorkouts, workout];
+        await set(userWorkoutsRef, updatedWorkouts);
+        setUserWorkouts(updatedWorkouts);
+        alert(`Workout added: ${workout.name}`);
+      } else {
+        console.log(`Workout "${workout.name}" is already in the list`);
+      }
     } catch (error) {
-        alert("Failed to add workout:", error);
+      alert("Failed to add workout:", error);
     }
   };
 
@@ -124,7 +115,6 @@ export default function WorkoutsScreen() {
           />
         </View>
 
-        {/* Fix: Display the Description properly */}
         <Text style={styles.workoutDescription}>{item.Description}</Text>
 
         {isExpanded && (
@@ -136,7 +126,6 @@ export default function WorkoutsScreen() {
 
             <View style={styles.workoutDetail}>
               <Text style={styles.detailLabel}>Equipment:</Text>
-              {/* Fix: Display the Equipment properly */}
               <Text style={styles.detailValue}>{item.Equipment}</Text>
             </View>
 
@@ -155,9 +144,9 @@ export default function WorkoutsScreen() {
               </View>
             </View>
             {isExpanded && !isAlreadySaved && (
-                <TouchableOpacity style={styles.addButton} onPress={() => handleAddWorkout(item)}>
-                    <Text style={styles.addButtonText}>Add Workout to My List</Text>
-                </TouchableOpacity>
+              <TouchableOpacity style={styles.addButton} onPress={() => handleAddWorkout(item)}>
+                <Text style={styles.addButtonText}>Add Workout to My List</Text>
+              </TouchableOpacity>
             )}
           </View>
         )}
@@ -174,12 +163,7 @@ export default function WorkoutsScreen() {
             style={[styles.tab, activeSection === section && styles.activeTab]}
             onPress={() => setActiveSection(section)}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeSection === section && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabText, activeSection === section && styles.activeTabText]}>
               {section}
             </Text>
           </TouchableOpacity>
@@ -188,14 +172,13 @@ export default function WorkoutsScreen() {
     );
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
+  // New: Render header component for the FlatList
+  const renderHeader = () => (
+    <>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Workouts</Text>
-        <Text style={styles.headerSubtitle}>
-          Find the perfect workout for you
-        </Text>
+        <Text style={styles.headerSubtitle}>Find the perfect workout for you</Text>
       </View>
 
       {/* Recommendation Card */}
@@ -206,9 +189,7 @@ export default function WorkoutsScreen() {
         <View style={styles.recommendationContent}>
           <FontAwesome name="star" size={24} color="#FFD700" />
           <View style={styles.recommendationTextContainer}>
-            <Text style={styles.recommendationTitle}>
-              Personalized Recommendations
-            </Text>
+            <Text style={styles.recommendationTitle}>Personalized Recommendations</Text>
             <Text style={styles.recommendationSubtitle}>
               Workouts tailored to your preferences
             </Text>
@@ -230,16 +211,19 @@ export default function WorkoutsScreen() {
 
       {/* Workout Categories */}
       {renderSectionTabs()}
+    </>
+  );
 
-      {/* Workout List */}
+  return (
+    <SafeAreaView style={styles.container}>
       <FlatList
+        ListHeaderComponent={renderHeader}
         data={workoutSections[activeSection]}
         renderItem={renderWorkoutCard}
         keyExtractor={(item) => item.name}
         contentContainerStyle={styles.workoutList}
         showsVerticalScrollIndicator={false}
       />
-
       <NavBar />
     </SafeAreaView>
   );
@@ -253,7 +237,6 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#09355c',
     padding: 20,
-    paddingTop: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -331,7 +314,7 @@ const styles = StyleSheet.create({
   },
   workoutList: {
     paddingHorizontal: 15,
-    paddingBottom: 80, // Make room for NavBar
+    paddingBottom: 80,
   },
   workoutCard: {
     backgroundColor: '#fff',
@@ -394,7 +377,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addButtonText: {
-      color: 'white',
-      fontWeight: 'bold',
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
