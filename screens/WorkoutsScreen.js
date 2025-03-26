@@ -192,7 +192,7 @@ export default function WorkoutsScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Workouts</Text>
+        <Text style={styles.headerTitle}>View Workouts</Text>
         <Text style={styles.headerSubtitle}>
           Find the perfect workout for you
         </Text>

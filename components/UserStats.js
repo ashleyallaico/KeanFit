@@ -185,8 +185,7 @@ const UserStats = () => {
         {/* Today's Exercises */}
         {Object.keys(filteredTodayActivities).length > 0 && (
           <View style={styles.todayContainer}>
-            <Text style={styles.todayTitle}>Exercises Done Today</Text>
-
+            <Text style={styles.todayTitle}>Today's Exercises</Text>
             {Object.entries(filteredTodayActivities).map(([category, entries]) => (
               <View key={category} style={styles.categoryContainer}>
                 <Text style={styles.categoryTitle}>{category}</Text>
@@ -201,22 +200,22 @@ const UserStats = () => {
                   />
                 ))}
 
-                {/* Display Today total at the bottom of each category */}
+                {/* Display Today total at the bottom of each category
                 {category === 'Cardio' && todaySummary.Cardio.totalSteps > 0 && (
                   <View style={styles.summaryCard}>
                     <Text style={styles.summaryText}>
                       Total: Walked {todaySummary.Cardio.totalSteps} steps in {Math.floor(todaySummary.Cardio.totalDuration / 60)} min {todaySummary.Cardio.totalDuration % 60} sec
                     </Text>
                   </View>
-                )}
+                )}*/}
 
-                {category === 'Yoga' && todaySummary.Yoga.totalDuration > 0 && (
+                {/*{category === 'Yoga' && todaySummary.Yoga.totalDuration > 0 && (
                   <View style={styles.summaryCard}>
                     <Text style={styles.summaryText}>
                       Total: Practiced for {Math.floor(todaySummary.Yoga.totalDuration / 60)} min {todaySummary.Yoga.totalDuration % 60} sec
                     </Text>
                   </View>
-                )}
+                )} */}
               </View>
             ))}
           </View>
@@ -269,10 +268,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   actionContainer: {
-    padding: 10,
+    padding: 15,
     backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
     alignItems: 'flex-end',
   },
   actionButton: {
@@ -308,7 +305,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#09355c',
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#777',
     fontWeight: '500',
   },
@@ -330,10 +327,8 @@ const styles = StyleSheet.create({
   },
   todayContainer: {
     backgroundColor: '#ffffff',
-    padding: 20,
+    padding: 10,
     borderRadius: 10,
-    marginTop: 15,
-    marginBottom: 15,
   },
   todayTitle: {
     textAlign: 'center',
@@ -344,7 +339,7 @@ const styles = StyleSheet.create({
   },
   pastContainer: {
     backgroundColor: '#ffffff',
-    padding: 20,
+    padding: 10,
     borderRadius: 10,
   },
   pastTitle: {

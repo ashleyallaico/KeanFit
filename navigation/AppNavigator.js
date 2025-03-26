@@ -77,7 +77,7 @@ const AppNavigator = () => {
       <Stack.Screen
         name="MyGoalsScreen"
         component={MyGoalsScreen}
-        options={{ title: 'My Goals Screen', headerBackVisible: false  }}
+        options={{ title: 'Fitness Goals', headerBackVisible: false  }}
       />
       <Stack.Screen
         name="Workouts"
@@ -97,7 +97,7 @@ const AppNavigator = () => {
       <Stack.Screen
         name="MyActivity"
         component={UserStats}
-        options={{ title: 'MyActivity', headerBackVisible: false  }}
+        options={{ title: 'My Activities', headerBackVisible: false  }}
       />
     </Stack.Navigator>
   );
