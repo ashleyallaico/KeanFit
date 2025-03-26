@@ -243,16 +243,19 @@ const MyGoalsScreen = () => {
     );
   };
 
-  // Mark a goal as complete
   const handleCompleteGoal = (goal) => {
     const db = getDatabase();
     const user = auth.currentUser;
     if (user) {
       const goalRef = ref(db, `Users/${user.uid}/Goals/${goal.id}`);
       set(goalRef, { ...goal, completed: true })
-        .then(() => console.log('Goal marked as complete!'))
+        .then(() => {
+          Alert.alert('Success', 'Goal marked as complete!');
+          console.log('Goal marked as complete!');
+        })
         .catch((error) => {
           console.error('Error updating goal: ', error);
+          Alert.alert('Error', 'Error updating goal: ' + error.message);
         });
     }
   };
