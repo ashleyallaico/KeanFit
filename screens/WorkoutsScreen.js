@@ -11,6 +11,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import NavBar from '../components/NavBar';
 import WorkoutRecommendations from '../components/WorkoutRecommendations';
+import Disclaimer from '../components/Disclaimer';
 
 export default function WorkoutsScreen() {
   const [workoutSections, setWorkoutSections] = useState({
@@ -208,6 +209,7 @@ export default function WorkoutsScreen() {
       {showRecommendations && (
         <View style={styles.recommendationsContainer}>
           <WorkoutRecommendations />
+          <Disclaimer/>
         </View>
       )}
 
