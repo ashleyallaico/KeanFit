@@ -83,7 +83,7 @@ const MyGoalsScreen = () => {
       const db = getDatabase();
       const user = auth.currentUser;
       if (user) {
-        const goalsRef = ref(db, `Users/${user.uid}/Goals/weeklySteps`);
+        const goalsRef = ref(db, `Users/${user.uid}/Goals`);
         onValue(goalsRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.val();
