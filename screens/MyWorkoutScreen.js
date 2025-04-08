@@ -3,6 +3,8 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, ScrollView } from '
 import { getDatabase, ref, get, set } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
 import NavBar from '../components/NavBar';
+import { FontAwesome } from '@expo/vector-icons';
+
 
 const MyWorkoutScreen = () => {
     const [userWorkouts, setUserWorkouts] = useState([]);
@@ -73,9 +75,36 @@ const MyWorkoutScreen = () => {
     const renderWorkoutItem = ({ item }) => (
         <View style={styles.item}>
             <Text style={styles.title}>{item.name}</Text>
-            {item.Equipment && <Text>Equipment: {item.Equipment}</Text>}
-            {item.Description && <Text>Description: {item.Description}</Text>}
-            {item.difficulty && <Text>Difficulty: {item.difficulty}</Text>}
+            <Text style={styles.workoutDescription}>{item.Description}</Text>
+            {item.Equipment && 
+                <View style={styles.workoutDetail}>
+                    <Text style={styles.detailLabel}>Equipment:</Text>
+                    <Text style={styles.detailValue}>{item.Equipment}</Text>
+                </View>
+            }
+            {item.difficulty && 
+                <View style={styles.workoutDetail}>
+                    <Text style={styles.detailLabel}>Difficulty:</Text>
+                    <View style={styles.difficultyContainer}>
+                        {[1, 2, 3, 4, 5].map((level) => (
+                        <FontAwesome
+                            key={level}
+                            name="circle"
+                            size={12}
+                            color={level <= item.difficulty ? '#09355c' : '#e0e0e0'}
+                            style={{ marginRight: 5 }}
+                        />
+                        ))}
+                    </View>
+                </View>          
+            }
+            {item.Category && 
+                <View style={styles.workoutDetail}>
+                <Text style={styles.detailLabel}>Category:</Text>
+                <Text style={styles.detailValue}>{item.Category}</Text>
+                </View>
+            }
+
             <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveWorkout(item)}>
                 <Text style={styles.removeButtonText}>Remove Workout</Text>
             </TouchableOpacity>
@@ -84,12 +113,10 @@ const MyWorkoutScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>My Workouts</Text>
             {Object.keys(groupedWorkouts).length > 0 ? (
                 <ScrollView>
                     {Object.keys(groupedWorkouts).map((category) => (
                         <View key={category}>
-                            <Text style={styles.categoryHeader}>{category}</Text>
                             <FlatList
                                 data={groupedWorkouts[category]}
                                 renderItem={renderWorkoutItem}
@@ -129,15 +156,25 @@ const styles = StyleSheet.create({
         paddingBottom: 5,
     },
     item: {
-        backgroundColor: '#f9c2ff',
+        backgroundColor: '#fff',
         padding: 20,
         marginVertical: 8,
         borderRadius: 8,
         marginHorizontal: 10,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 2,
     },
     title: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
+        color: '#09355c',
+    },
+    textTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#09355c',
     },
     removeButton: {
         marginTop: 10,
@@ -155,6 +192,31 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'gray',
     },
+    workoutDetail: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+      },
+      detailLabel: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+        width: 90,
+      },
+      detailValue: {
+        fontSize: 14,
+        color: '#666',
+        flex: 1,
+      },
+      workoutDescription: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 10,
+      },
+      difficultyContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+      },
 });
 
 export default MyWorkoutScreen;

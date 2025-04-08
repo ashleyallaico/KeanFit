@@ -230,7 +230,7 @@ const StepTrackingScreen = ({ route }) => {
             {() => (
               <View style={styles.circleContent}>
                 <Text style={styles.stepsNumber}>{dailySteps}</Text>
-                <Text style={styles.stepsLabel}>steps</Text>
+                <Text style={styles.stepsLabel}>Steps</Text>
                 <Text style={styles.stepsGoal}>Goal: {stepGoal}</Text>
               </View>
             )}
@@ -304,10 +304,8 @@ const StepTrackingScreen = ({ route }) => {
                 .filter(([id, details]) => details.date === todayDate)
                 .map(([id, details]) => (
                   <View key={id} style={styles.activityItem}>
-                    <Text style={styles.activityText}>
-                      Cardio: {details.steps} steps in{' '}
-                      {formatTime(details.cardioDuration)}
-                    </Text>
+                    <Text style={styles.activityText}>Total Steps: {details.steps}</Text>
+                    <Text style={styles.activityText}>Cardio Duration:{''} {formatTime(details.cardioDuration)}</Text>
                   </View>
                 ))}
             </View>
@@ -330,7 +328,7 @@ const styles = StyleSheet.create({
   dateContainer: {
     backgroundColor: '#09355c',
     padding: 20,
-    paddingTop: 50,
+    paddingTop: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     alignItems: 'center',

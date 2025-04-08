@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning }) => {
-    // const [isRunning, setIsRunning] = useState(false);
-    const intervalRef = useRef(null); 
+    const intervalRef = useRef(null);
 
     useEffect(() => {
         if (isRunning) {
@@ -15,30 +15,18 @@ const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning 
             clearInterval(intervalRef.current);
         }
 
-        return () => clearInterval(intervalRef.current); 
+        return () => clearInterval(intervalRef.current);
     }, [isRunning, setTimer]);
 
-    const startTimer = () => {
-        if (!isRunning) {
-            setIsRunning(true);
-        }
-    };
-
-    const pauseTimer = () => {
-        setIsRunning(false);
-    };
-
+    const toggleTimer = () => setIsRunning((prev) => !prev);
+    
     const confirmReset = () => {
         Alert.alert(
             "Confirm Reset",
             "This will delete all recorded time permanently. Are you sure?",
             [
                 { text: "Cancel", style: "cancel" },
-                {
-                    text: "Reset",
-                    onPress: resetTimer,
-                    style: "destructive",
-                },
+                { text: "Reset", onPress: resetTimer, style: "destructive" },
             ]
         );
     };
@@ -57,12 +45,18 @@ const YogaComponent = ({ timer, setTimer, handleSubmit, isRunning, setIsRunning 
             </Text>
 
             <View style={styles.buttonContainer}>
-                <Button title="Start" onPress={startTimer} color="#4CAF50" />
-                <Button title="Pause" onPress={pauseTimer} color="#FFA500" />
-                <Button title="Reset" onPress={confirmReset} color="#FF6347" />
-            </View>
+                <TouchableOpacity style={styles.circleButton} onPress={toggleTimer}>
+                    <FontAwesome5 name={isRunning ? "pause" : "play"} size={24} color="white" />
+                </TouchableOpacity>
 
-            <Button title="Save Session" onPress={handleSubmit} color="#09355c" />
+                <TouchableOpacity style={styles.circleButton} onPress={confirmReset}>
+                    <FontAwesome5 name="redo" size={24} color="white" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.circleButton} onPress={handleSubmit}>
+                    <FontAwesome5 name="save" size={24} color="white" />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -71,22 +65,45 @@ const styles = StyleSheet.create({
     container: {
         padding: 20,
         alignItems: 'center',
+        backgroundColor: '#ffffff',
+        borderRadius: 15,
+        shadowColor: '#09355c',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 5 },
+        shadowRadius: 10,
+        borderWidth: 1,
+        borderColor: '#09355c',
+        marginBottom: 20,
     },
     title: {
         fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 10,
+        color: '#09355c',
     },
     timerText: {
         fontSize: 36,
         fontWeight: 'bold',
         marginBottom: 20,
+        color: '#09355c',
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        width: '100%',
-        marginBottom: 20,
+        width: '80%',
+    },
+    circleButton: {
+        backgroundColor: '#09355c',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
     },
 });
 
