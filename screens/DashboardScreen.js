@@ -8,8 +8,10 @@ import {
   Image,
   StatusBar,
   Dimensions,
+  ImageBackground,
+  Platform,
 } from 'react-native';
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { FontAwesome, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import NavBar from '../components/NavBar';
@@ -28,6 +30,11 @@ export default function DashboardScreen() {
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
+    // IMPORTANT: Hide the header to remove "Dashboard" text
+    navigation.setOptions({
+      headerShown: false,
+    });
+
     // Set greeting based on time of day
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Good Morning');
@@ -36,7 +43,7 @@ export default function DashboardScreen() {
 
     // Fetch user data
     fetchUserData();
-  }, []);
+  }, [navigation]);
 
   const fetchUserData = () => {
     const user = auth.currentUser;
@@ -140,44 +147,48 @@ export default function DashboardScreen() {
     {
       title: 'My Workout',
       icon: 'dumbbell',
+      iconFamily: 'FontAwesome5',
       navigateTo: 'MyWorkout',
-      color: '#4A6572',
+      color: '#053559',
     },
     {
       title: 'Track',
       icon: 'bar-chart',
+      iconFamily: 'FontAwesome',
       navigateTo: 'TrackWorkout',
-      color: '#4A6572',
+      color: '#053559',
     },
     {
       title: 'Goals',
       icon: 'trophy',
+      iconFamily: 'FontAwesome',
       navigateTo: 'MyGoalsScreen',
-      color: '#4A6572',
+      color: '#053559',
     },
     {
       title: 'Activities',
-      icon: 'list-alt',
+      icon: 'list',
+      iconFamily: 'FontAwesome',
       navigateTo: 'MyActivity',
-      color: '#4A6572',
+      color: '#053559',
     },
   ];
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Header Background */}
-      <LinearGradient
-        colors={['#053559', '#09355c']}
-        style={styles.headerGradient}
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#053559"
+        translucent={true}
       />
 
-      <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+      {/* Hero Section with KeanBG.png Background */}
+      <ImageBackground
+        source={require('../assets/KeanBG.png')}
+        style={styles.heroSection}
+        resizeMode="cover"
       >
-        {/* Profile Section */}
+        {/* Profile section */}
         <View style={styles.profileSection}>
           <View style={styles.profileInfo}>
             <Text style={styles.greetingText}>{greeting},</Text>
@@ -190,246 +201,282 @@ export default function DashboardScreen() {
             style={styles.profileImageContainer}
             onPress={() => navigation.navigate('Profile')}
           >
-            <FontAwesome name="user-circle" size={50} color="#ffffff" />
+            {profile?.profileImage ? (
+              <Image
+                source={{ uri: profile.profileImage }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={styles.profileIconBg}>
+                <FontAwesome name="user-circle" size={40} color="#ffffff" />
+              </View>
+            )}
           </TouchableOpacity>
         </View>
+      </ImageBackground>
 
-        {/* Step Tracking Progress */}
-        <View style={styles.stepProgressCard}>
-          <View style={styles.stepProgressHeader}>
-            <View>
-              <Text style={styles.stepProgressTitle}>Today's Steps</Text>
-              <Text style={styles.stepCount}>
-                {stepData.today.toLocaleString()} /{' '}
-                {stepData.goal.toLocaleString()}
-              </Text>
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Dashboard Content */}
+        <View style={styles.dashboardContent}>
+          {/* Step Tracking Progress */}
+          <View style={styles.stepProgressCard}>
+            <View style={styles.stepProgressHeader}>
+              <View>
+                <Text style={styles.stepProgressTitle}>Today's Steps</Text>
+                <Text style={styles.stepCount}>
+                  {stepData.today.toLocaleString()} /{' '}
+                  {stepData.goal.toLocaleString()}
+                </Text>
+              </View>
+              <FontAwesome5 name="walking" size={24} color="#053559" />
             </View>
-            <FontAwesome name="shoe-prints" size={24} color="#09355c" />
-          </View>
-          <View style={styles.progressBarContainer}>
-            <View
-              style={[
-                styles.progressBar,
-                { width: `${stepProgressPercentage}%` },
-              ]}
-            />
-          </View>
-          <TouchableOpacity
-            style={styles.stepTrackingButton}
-            onPress={() => navigation.navigate('StepTracking')}
-          >
-            <Text style={styles.stepTrackingButtonText}>View Details</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Today's Workout Section */}
-        {todayWorkout ? (
-          <View style={styles.todayWorkoutContainer}>
-            <Text style={styles.sectionTitle}>Today's Workout</Text>
+            <View style={styles.progressBarContainer}>
+              <View
+                style={[
+                  styles.progressBar,
+                  { width: `${stepProgressPercentage}%` },
+                ]}
+              />
+            </View>
             <TouchableOpacity
-              style={styles.workoutCard}
+              style={styles.stepTrackingButton}
+              onPress={() => navigation.navigate('StepTracking')}
+            >
+              <Text style={styles.stepTrackingButtonText}>View Details</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Today's Workout Section */}
+          {todayWorkout ? (
+            <View style={styles.todayWorkoutContainer}>
+              <Text style={styles.sectionTitle}>Today's Workout</Text>
+              <TouchableOpacity
+                style={styles.workoutCard}
+                onPress={() => navigation.navigate('MyWorkout')}
+              >
+                <View style={styles.workoutCardContent}>
+                  <View style={styles.workoutInfo}>
+                    <Text style={styles.workoutTitle}>{todayWorkout.name}</Text>
+                    <Text style={styles.workoutCategory}>
+                      {todayWorkout.Category || 'General'}
+                    </Text>
+                    <View style={styles.workoutMeta}>
+                      {todayWorkout.difficulty && (
+                        <View style={styles.difficultyContainer}>
+                          {[1, 2, 3, 4, 5].map((level) => (
+                            <FontAwesome
+                              key={level}
+                              name="circle"
+                              size={8}
+                              color={
+                                level <= todayWorkout.difficulty
+                                  ? '#053559'
+                                  : '#e0e0e0'
+                              }
+                              style={{ marginRight: 3 }}
+                            />
+                          ))}
+                        </View>
+                      )}
+                      <Text style={styles.difficultyLabel}>
+                        {todayWorkout.difficulty
+                          ? todayWorkout.difficulty === 1
+                            ? 'Beginner'
+                            : todayWorkout.difficulty === 2
+                            ? 'Easy'
+                            : todayWorkout.difficulty === 3
+                            ? 'Moderate'
+                            : todayWorkout.difficulty === 4
+                            ? 'Advanced'
+                            : 'Expert'
+                          : 'Difficulty not set'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.startButtonContainer}>
+                    <TouchableOpacity style={styles.startButton}>
+                      <Text style={styles.startButtonText}>Start</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.noWorkoutCard}
               onPress={() => navigation.navigate('MyWorkout')}
             >
-              <View style={styles.workoutCardContent}>
-                <View style={styles.workoutInfo}>
-                  <Text style={styles.workoutTitle}>{todayWorkout.name}</Text>
-                  <Text style={styles.workoutCategory}>
-                    {todayWorkout.Category || 'General'}
-                  </Text>
-                  <View style={styles.workoutMeta}>
-                    {todayWorkout.difficulty && (
-                      <View style={styles.difficultyContainer}>
-                        {[1, 2, 3, 4, 5].map((level) => (
-                          <FontAwesome
-                            key={level}
-                            name="circle"
-                            size={8}
-                            color={
-                              level <= todayWorkout.difficulty
-                                ? '#09355c'
-                                : '#e0e0e0'
-                            }
-                            style={{ marginRight: 3 }}
-                          />
-                        ))}
-                      </View>
-                    )}
-                    <Text style={styles.difficultyLabel}>
-                      {todayWorkout.difficulty
-                        ? todayWorkout.difficulty === 1
-                          ? 'Beginner'
-                          : todayWorkout.difficulty === 2
-                          ? 'Easy'
-                          : todayWorkout.difficulty === 3
-                          ? 'Moderate'
-                          : todayWorkout.difficulty === 4
-                          ? 'Advanced'
-                          : 'Expert'
-                        : 'Difficulty not set'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.startButtonContainer}>
-                  <TouchableOpacity style={styles.startButton}>
-                    <Text style={styles.startButtonText}>Start</Text>
+              <Text style={styles.noWorkoutTitle}>No Workout Selected</Text>
+              <Text style={styles.noWorkoutText}>
+                Tap here to choose a workout for today
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Goals Section */}
+          <View style={styles.goalsSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Upcoming Goals</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MyGoalsScreen')}
+              >
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+
+            {goals.length > 0 ? (
+              <View style={styles.goalsList}>
+                {goals.map((goal, index) => (
+                  <TouchableOpacity
+                    key={goal.id}
+                    style={styles.goalItem}
+                    onPress={() => navigation.navigate('MyGoalsScreen')}
+                  >
+                    <View style={styles.goalIconContainer}>
+                      {goal.category === 'Cardio' ? (
+                        <FontAwesome
+                          name="heartbeat"
+                          size={22}
+                          color="#053559"
+                        />
+                      ) : goal.category === 'Strength' ? (
+                        <FontAwesome5
+                          name="dumbbell"
+                          size={22}
+                          color="#053559"
+                        />
+                      ) : (
+                        <FontAwesome name="spa" size={22} color="#053559" />
+                      )}
+                    </View>
+                    <View style={styles.goalContent}>
+                      <Text style={styles.goalTitle}>
+                        {goal.title || `${goal.category} Goal`}
+                      </Text>
+                      <Text style={styles.goalDeadline}>
+                        {getDeadlineStatus(goal.deadline)}
+                      </Text>
+                    </View>
+                    <FontAwesome name="chevron-right" size={16} color="#999" />
                   </TouchableOpacity>
-                </View>
+                ))}
               </View>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.noWorkoutCard}
-            onPress={() => navigation.navigate('MyWorkout')}
-          >
-            <Text style={styles.noWorkoutTitle}>No Workout Selected</Text>
-            <Text style={styles.noWorkoutText}>
-              Tap here to choose a workout for today
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Goals Section */}
-        <View style={styles.goalsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Upcoming Goals</Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('MyGoalsScreen')}
-            >
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.noGoalsContainer}
+                onPress={() => navigation.navigate('MyGoalsScreen')}
+              >
+                <Text style={styles.noContentText}>
+                  No goals set. Tap to create a goal.
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          {goals.length > 0 ? (
-            <View style={styles.goalsList}>
-              {goals.map((goal, index) => (
+          {/* Quick Access Grid */}
+          <View style={styles.quickAccessSection}>
+            <Text style={styles.sectionTitle}>Quick Access</Text>
+            <View style={styles.quickAccessGrid}>
+              {quickAccessItems.map((item, index) => (
                 <TouchableOpacity
-                  key={goal.id}
-                  style={styles.goalItem}
-                  onPress={() => navigation.navigate('MyGoalsScreen')}
+                  key={index}
+                  style={styles.quickAccessItem}
+                  onPress={() => navigation.navigate(item.navigateTo)}
                 >
-                  <View style={styles.goalIconContainer}>
-                    <FontAwesome
-                      name={
-                        goal.category === 'Cardio'
-                          ? 'heartbeat'
-                          : goal.category === 'Strength'
-                          ? 'dumbbell'
-                          : 'spa'
-                      }
-                      size={22}
-                      color="#09355c"
-                    />
+                  <View
+                    style={[
+                      styles.iconContainer,
+                      { backgroundColor: item.color },
+                    ]}
+                  >
+                    {item.iconFamily === 'FontAwesome5' ? (
+                      <FontAwesome5 name={item.icon} size={22} color="#fff" />
+                    ) : (
+                      <FontAwesome name={item.icon} size={22} color="#fff" />
+                    )}
                   </View>
-                  <View style={styles.goalContent}>
-                    <Text style={styles.goalTitle}>{goal.category} Goal</Text>
-                    <Text style={styles.goalDeadline}>
-                      {getDeadlineStatus(goal.deadline)}
-                    </Text>
-                  </View>
-                  <FontAwesome name="chevron-right" size={16} color="#999" />
+                  <Text style={styles.quickAccessText}>{item.title}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-          ) : (
-            <TouchableOpacity
-              style={styles.noGoalsContainer}
-              onPress={() => navigation.navigate('MyGoalsScreen')}
-            >
-              <Text style={styles.noContentText}>
-                No goals set. Tap to create a goal.
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
+          </View>
 
-        {/* Quick Access Grid */}
-        <View style={styles.quickAccessSection}>
-          <Text style={styles.sectionTitle}>Quick Access</Text>
-          <View style={styles.quickAccessGrid}>
-            {quickAccessItems.map((item, index) => (
+          {/* Recent Activities */}
+          <View style={styles.recentActivitiesSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recent Activities</Text>
               <TouchableOpacity
-                key={index}
-                style={styles.quickAccessItem}
-                onPress={() => navigation.navigate(item.navigateTo)}
+                onPress={() => navigation.navigate('MyActivity')}
               >
-                <View
-                  style={[
-                    styles.iconContainer,
-                    { backgroundColor: item.color },
-                  ]}
-                >
-                  <FontAwesome name={item.icon} size={22} color="#fff" />
-                </View>
-                <Text style={styles.quickAccessText}>{item.title}</Text>
+                <Text style={styles.seeAllText}>See All</Text>
               </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+            </View>
 
-        {/* Recent Activities */}
-        <View style={styles.recentActivitiesSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Activities</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('MyActivity')}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          {recentActivities.length > 0 ? (
-            <View style={styles.activitiesList}>
-              {recentActivities.map((activity, index) => (
-                <View key={index} style={styles.activityItem}>
-                  <View style={styles.activityIconContainer}>
-                    <FontAwesome
-                      name={
-                        activity.type === 'Cardio'
-                          ? 'running'
-                          : activity.type === 'Strength'
-                          ? 'dumbbell'
-                          : activity.type === 'Yoga'
-                          ? 'spa'
-                          : 'star'
-                      }
-                      size={20}
-                      color="#fff"
-                    />
-                  </View>
-                  <View style={styles.activityContent}>
-                    <Text style={styles.activityTitle}>
-                      {activity.name || activity.type}
-                    </Text>
-                    <Text style={styles.activityDate}>{activity.date}</Text>
-                  </View>
-                  {activity.duration && (
-                    <View style={styles.activityStats}>
-                      <Text style={styles.activityDuration}>
-                        {activity.duration} min
-                      </Text>
+            {recentActivities.length > 0 ? (
+              <View style={styles.activitiesList}>
+                {recentActivities.map((activity, index) => (
+                  <View key={index} style={styles.activityItem}>
+                    <View style={styles.activityIconContainer}>
+                      {activity.type === 'Cardio' ? (
+                        <FontAwesome5 name="running" size={20} color="#fff" />
+                      ) : activity.type === 'Strength' ? (
+                        <FontAwesome5 name="dumbbell" size={20} color="#fff" />
+                      ) : activity.type === 'Yoga' ? (
+                        <FontAwesome name="leaf" size={20} color="#fff" />
+                      ) : (
+                        <FontAwesome name="star" size={20} color="#fff" />
+                      )}
                     </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.noActivitiesContainer}>
-              <Text style={styles.noContentText}>
-                No recent activities to show.
+                    <View style={styles.activityContent}>
+                      <Text style={styles.activityTitle}>
+                        {activity.name || activity.type}
+                      </Text>
+                      <Text style={styles.activityDate}>{activity.date}</Text>
+                    </View>
+                    {activity.duration && (
+                      <View style={styles.activityStats}>
+                        <Text style={styles.activityDuration}>
+                          {activity.duration} min
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.noActivitiesContainer}>
+                <Text style={styles.noContentText}>
+                  No recent activities to show.
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Motivation Quote */}
+          <LinearGradient
+            colors={['#053559', '#09355c']}
+            style={styles.motivationCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <View style={styles.quoteContainer}>
+              <Text style={styles.quoteText}>
+                "The difference between try and triumph is just a little umph!"
               </Text>
+              <Text style={styles.quoteAuthor}>- KEANFIT</Text>
             </View>
-          )}
-        </View>
 
-        {/* Motivation Quote */}
-        <View style={styles.motivationCard}>
-          <Text style={styles.quoteText}>
-            "The difference between try and triumph is just a little umph!"
-          </Text>
-          <Text style={styles.quoteAuthor}>- KEANFIT</Text>
-        </View>
+            <View style={styles.logoWatermark}>
+              <FontAwesome name="paw" size={60} color="rgba(255,255,255,0.2)" />
+            </View>
+          </LinearGradient>
 
-        {/* Bottom Padding for NavBar */}
-        <View style={styles.bottomPadding} />
+          {/* Bottom Padding for NavBar */}
+          <View style={styles.bottomPadding} />
+        </View>
       </ScrollView>
 
       <NavBar />
@@ -442,31 +489,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  headerGradient: {
-    position: 'absolute',
-    height: 220,
-    left: 0,
-    right: 0,
-    top: 0,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
   scrollContainer: {
     flex: 1,
+  },
+  heroSection: {
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 20,
+    paddingBottom: 30,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 15,
+    position: 'relative', // For positioning the logo background
+    elevation: 8, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    zIndex: 10,
+    overflow: 'hidden', // Make sure the rounded corners show properly
   },
   profileSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingBottom: 10,
+    zIndex: 2, // Above the background logo
   },
   profileInfo: {
     flex: 1,
   },
   greetingText: {
     fontSize: 16,
+    marginTop: 30,
     color: '#fff',
     opacity: 0.9,
   },
@@ -475,6 +529,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   dateText: {
     fontSize: 14,
@@ -482,17 +539,31 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   profileImageContainer: {
-    width: 50,
-    height: 50,
+    width: 80,
+    height: 80,
+    marginTop: 30,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  profileImage: {
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  profileIconBg: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 5,
+    borderRadius: 25,
+  },
+  dashboardContent: {
+    paddingTop: 10,
+    paddingHorizontal: 20,
   },
   stepProgressCard: {
     backgroundColor: '#fff',
     borderRadius: 18,
     padding: 20,
-    marginHorizontal: 20,
-    marginTop: 20,
+    marginBottom: 25,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -514,7 +585,7 @@ const styles = StyleSheet.create({
   stepCount: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#09355c',
+    color: '#053559',
   },
   progressBarContainer: {
     height: 8,
@@ -525,7 +596,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#09355c',
+    backgroundColor: '#053559',
     borderRadius: 4,
   },
   stepTrackingButton: {
@@ -537,12 +608,11 @@ const styles = StyleSheet.create({
   },
   stepTrackingButtonText: {
     fontSize: 14,
-    color: '#09355c',
+    color: '#053559',
     fontWeight: '600',
   },
   todayWorkoutContainer: {
-    marginTop: 25,
-    paddingHorizontal: 20,
+    marginBottom: 25,
   },
   sectionTitle: {
     fontSize: 20,
@@ -555,10 +625,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
   },
   workoutCardContent: {
     padding: 20,
@@ -572,7 +642,7 @@ const styles = StyleSheet.create({
   workoutTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#09355c',
+    color: '#053559',
     marginBottom: 4,
   },
   workoutCategory: {
@@ -597,7 +667,7 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
   },
   startButton: {
-    backgroundColor: '#09355c',
+    backgroundColor: '#053559',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
@@ -611,8 +681,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 18,
     padding: 25,
-    marginHorizontal: 20,
-    marginTop: 25,
+    marginBottom: 25,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -623,7 +692,7 @@ const styles = StyleSheet.create({
   noWorkoutTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#09355c',
+    color: '#053559',
     marginBottom: 10,
   },
   noWorkoutText: {
@@ -632,8 +701,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   goalsSection: {
-    marginTop: 25,
-    paddingHorizontal: 20,
+    marginBottom: 25,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -643,7 +711,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: '#09355c',
+    color: '#053559',
     fontWeight: '600',
   },
   goalsList: {
@@ -702,8 +770,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   quickAccessSection: {
-    marginTop: 25,
-    paddingHorizontal: 20,
+    marginBottom: 25,
   },
   quickAccessGrid: {
     flexDirection: 'row',
@@ -737,8 +804,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   recentActivitiesSection: {
-    marginTop: 25,
-    paddingHorizontal: 20,
+    marginBottom: 25,
   },
   activitiesList: {
     backgroundColor: '#fff',
@@ -761,7 +827,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#09355c',
+    backgroundColor: '#053559',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
@@ -785,7 +851,7 @@ const styles = StyleSheet.create({
   activityDuration: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#09355c',
+    color: '#053559',
   },
   noActivitiesContainer: {
     backgroundColor: '#fff',
@@ -800,17 +866,19 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   motivationCard: {
-    backgroundColor: '#09355c',
     borderRadius: 18,
     padding: 25,
-    marginHorizontal: 20,
-    marginTop: 25,
-    alignItems: 'center',
+    marginBottom: 25,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  quoteContainer: {
+    zIndex: 2,
   },
   quoteText: {
     fontSize: 18,
@@ -822,8 +890,16 @@ const styles = StyleSheet.create({
   },
   quoteAuthor: {
     fontSize: 14,
-    color: '#fff',
-    opacity: 0.8,
+    color: '#FFCB05', // Yellow from logo
+    textAlign: 'right',
+    fontWeight: 'bold',
+  },
+  logoWatermark: {
+    position: 'absolute',
+    right: 20,
+    bottom: -15,
+    opacity: 0.7,
+    zIndex: 1,
   },
   bottomPadding: {
     height: 100,

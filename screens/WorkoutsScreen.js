@@ -15,12 +15,13 @@ import {
   Animated,
 } from 'react-native';
 import {
-  FontAwesome,
+  FontAwesome5,
   Ionicons,
   MaterialCommunityIcons,
 } from '@expo/vector-icons';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { auth } from '../services/firebaseConfig';
 import NavBar from '../components/NavBar';
 
@@ -34,6 +35,7 @@ export default function WorkoutsScreen() {
     'Strength Training': [],
     Yoga: [],
   });
+  const navigation = useNavigation();
   const [activeSection, setActiveSection] = useState('All');
   const [expandedWorkout, setExpandedWorkout] = useState(null);
   const [userWorkouts, setUserWorkouts] = useState([]);
@@ -45,7 +47,7 @@ export default function WorkoutsScreen() {
   const scrollY = new Animated.Value(0);
   const [quickFilters, setQuickFilters] = useState([
     { name: 'All', active: true, icon: 'grid' },
-    { name: 'Cardio', active: false, icon: 'running' },
+    { name: 'Cardio', active: false, icon: 'run' },
     { name: 'Strength', active: false, icon: 'dumbbell' },
     { name: 'Yoga', active: false, icon: 'yoga' },
     { name: 'Quick', active: false, icon: 'timer-sand' },
@@ -157,6 +159,12 @@ export default function WorkoutsScreen() {
   useEffect(() => {
     handleFilterChange(activeSection);
   }, [workoutSections, activeSection, searchQuery]);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  });
 
   const fetchUserWorkouts = () => {
     const user = auth.currentUser;
@@ -314,9 +322,9 @@ export default function WorkoutsScreen() {
       case 'Strength Training':
         return 'dumbbell';
       case 'Yoga':
-        return 'yoga';
+        return 'praying-hands';
       default:
-        return 'fitness';
+        return 'heartbeat';
     }
   };
 
@@ -340,7 +348,7 @@ export default function WorkoutsScreen() {
         style={styles.featuredGradient}
       >
         <View style={styles.featuredWorkoutBadge}>
-          <FontAwesome
+          <FontAwesome5
             name={getCategoryIcon(item.Category)}
             size={14}
             color="#fff"
@@ -352,15 +360,15 @@ export default function WorkoutsScreen() {
           <Text style={styles.featuredWorkoutTitle}>{item.name}</Text>
           <View style={styles.featuredWorkoutMeta}>
             <View style={styles.featuredMetaItem}>
-              <FontAwesome name="clock-o" size={14} color="#fff" />
+              <FontAwesome5 name="clock" size={14} color="#fff" />
               <Text style={styles.featuredMetaText}>{item.duration} min</Text>
             </View>
             <View style={styles.featuredMetaItem}>
-              <FontAwesome name="fire" size={14} color="#fff" />
+              <FontAwesome5 name="fire" size={14} color="#fff" />
               <Text style={styles.featuredMetaText}>{item.calories} cal</Text>
             </View>
             <View style={styles.featuredMetaItem}>
-              <FontAwesome name="signal" size={14} color="#fff" />
+              <FontAwesome5 name="signal" size={14} color="#fff" />
               <Text style={styles.featuredMetaText}>
                 {getDifficultyText(item.difficulty)}
               </Text>
@@ -373,8 +381,9 @@ export default function WorkoutsScreen() {
         style={styles.favoriteButtonFeatured}
         onPress={() => toggleFavorite(item.id)}
       >
-        <FontAwesome
-          name={item.favorite ? 'heart' : 'heart-o'}
+        <FontAwesome5
+          name={item.favorite ? 'heart' : 'heart'}
+          solid={item.favorite}
           size={20}
           color={item.favorite ? '#FF385C' : '#fff'}
         />
@@ -404,8 +413,9 @@ export default function WorkoutsScreen() {
           style={styles.favoriteButton}
           onPress={() => toggleFavorite(item.id)}
         >
-          <FontAwesome
-            name={item.favorite ? 'heart' : 'heart-o'}
+          <FontAwesome5
+            name="heart"
+            solid={item.favorite}
             size={18}
             color={item.favorite ? '#FF385C' : '#fff'}
           />
@@ -418,7 +428,7 @@ export default function WorkoutsScreen() {
 
           <View style={styles.workoutCardMeta}>
             <View style={styles.categoryPill}>
-              <FontAwesome
+              <FontAwesome5
                 name={getCategoryIcon(item.Category)}
                 size={10}
                 color="#09355c"
@@ -428,7 +438,7 @@ export default function WorkoutsScreen() {
             </View>
 
             <View style={styles.minutesPill}>
-              <FontAwesome name="clock-o" size={12} color="#09355c" />
+              <FontAwesome5 name="clock" size={12} color="#09355c" />
               <Text style={styles.minutesPillText}>{item.duration} min</Text>
             </View>
           </View>
@@ -455,7 +465,7 @@ export default function WorkoutsScreen() {
     );
   };
 
-  // Render the filter category buttons - FIX APPLIED HERE
+  // Render the filter category buttons
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -526,7 +536,7 @@ export default function WorkoutsScreen() {
               style={styles.closeButton}
               onPress={() => setExpandedWorkout(null)}
             >
-              <FontAwesome name="arrow-left" size={22} color="#fff" />
+              <FontAwesome5 name="arrow-left" size={22} color="#fff" />
             </TouchableOpacity>
 
             <View style={styles.modalBody}>
@@ -536,8 +546,9 @@ export default function WorkoutsScreen() {
                   style={styles.favoriteButtonLarge}
                   onPress={() => toggleFavorite(expandedWorkout.id)}
                 >
-                  <FontAwesome
-                    name={expandedWorkout.favorite ? 'heart' : 'heart-o'}
+                  <FontAwesome5
+                    name="heart"
+                    solid={expandedWorkout.favorite}
                     size={22}
                     color={expandedWorkout.favorite ? '#FF385C' : '#09355c'}
                   />
@@ -546,7 +557,7 @@ export default function WorkoutsScreen() {
 
               <View style={styles.modalMetaContainer}>
                 <View style={styles.modalMetaItem}>
-                  <FontAwesome
+                  <FontAwesome5
                     name={getCategoryIcon(expandedWorkout.Category)}
                     size={18}
                     color="#09355c"
@@ -556,13 +567,13 @@ export default function WorkoutsScreen() {
                   </Text>
                 </View>
                 <View style={styles.modalMetaItem}>
-                  <FontAwesome name="clock-o" size={18} color="#09355c" />
+                  <FontAwesome5 name="clock" size={18} color="#09355c" />
                   <Text style={styles.modalMetaText}>
                     {expandedWorkout.duration} min
                   </Text>
                 </View>
                 <View style={styles.modalMetaItem}>
-                  <FontAwesome name="fire" size={18} color="#09355c" />
+                  <FontAwesome5 name="fire" size={18} color="#09355c" />
                   <Text style={styles.modalMetaText}>
                     {expandedWorkout.calories} cal
                   </Text>
@@ -624,7 +635,7 @@ export default function WorkoutsScreen() {
                   handleAddWorkout(expandedWorkout);
                 }}
               >
-                <FontAwesome
+                <FontAwesome5
                   name="plus"
                   size={18}
                   color="#fff"
@@ -641,7 +652,7 @@ export default function WorkoutsScreen() {
                   setExpandedWorkout(null);
                 }}
               >
-                <FontAwesome
+                <FontAwesome5
                   name="play"
                   size={18}
                   color="#fff"
@@ -700,7 +711,7 @@ export default function WorkoutsScreen() {
         </View>
       </View>
 
-      {/* Filter Categories - MODIFIED FOR FIX */}
+      {/* Filter Categories */}
       <View style={styles.filterCategoriesWrapper}>
         <FlatList
           data={quickFilters}
@@ -726,13 +737,13 @@ export default function WorkoutsScreen() {
             { useNativeDriver: false }
           )}
           scrollEventThrottle={16}
-          contentContainerStyle={styles.scrollViewContent} // Added for better spacing
+          contentContainerStyle={styles.scrollViewContent}
         >
           {/* Featured Workouts */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
-                <FontAwesome
+                <FontAwesome5
                   name="star"
                   size={18}
                   color="#FF8C00"
@@ -767,7 +778,7 @@ export default function WorkoutsScreen() {
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
-                <FontAwesome
+                <FontAwesome5
                   name={
                     activeSection === 'All'
                       ? 'th-large'
@@ -776,9 +787,9 @@ export default function WorkoutsScreen() {
                       : activeSection === 'Strength Training'
                       ? 'dumbbell'
                       : activeSection === 'Yoga'
-                      ? 'yoga'
+                      ? 'praying-hands'
                       : activeSection === 'Quick (< 15 min)'
-                      ? 'clock-o'
+                      ? 'stopwatch'
                       : 'home'
                   }
                   size={18}
@@ -880,7 +891,6 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   // Category filter styles
-  // Category filter styles - FIXED STYLES HERE
   filterCategoriesWrapper: {
     height: 40, // Fixed height container for categories
     marginBottom: 5, // Add some margin at the bottom
