@@ -21,7 +21,6 @@ import {
 } from '@expo/vector-icons';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { auth } from '../services/firebaseConfig';
 import NavBar from '../components/NavBar';
 
@@ -29,6 +28,7 @@ const { width, height } = Dimensions.get('window');
 const cardWidth = width * 0.42;
 
 export default function WorkoutsScreen() {
+  // State variables remain the same...
   const [workoutSections, setWorkoutSections] = useState({
     Cardio: [],
     'Strength Training': [],
@@ -46,13 +46,12 @@ export default function WorkoutsScreen() {
   const [quickFilters, setQuickFilters] = useState([
     { name: 'All', active: true, icon: 'grid' },
     { name: 'Cardio', active: false, icon: 'running' },
-    { name: 'Strength Training', active: false, icon: 'dumbbell' },
+    { name: 'Strength', active: false, icon: 'dumbbell' },
     { name: 'Yoga', active: false, icon: 'yoga' },
-    { name: 'Quick (< 15 min)', active: false, icon: 'timer-sand' },
-    { name: 'No Equipment', active: false, icon: 'home' },
+    { name: 'Quick', active: false, icon: 'timer-sand' },
+    { name: 'No Equip', active: false, icon: 'home' },
   ]);
 
-  // Header animation values
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 120],
     outputRange: [160, 80],
@@ -71,9 +70,9 @@ export default function WorkoutsScreen() {
     extrapolate: 'clamp',
   });
 
-  // Fetch workouts from Firebase
   useEffect(() => {
     const fetchWorkouts = async () => {
+      // Existing fetch logic...
       setIsLoading(true);
       const db = getDatabase();
       const workoutsRef = ref(db, 'Workouts');
@@ -456,7 +455,7 @@ export default function WorkoutsScreen() {
     );
   };
 
-  // Render the filter category buttons
+  // Render the filter category buttons - FIX APPLIED HERE
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -467,18 +466,31 @@ export default function WorkoutsScreen() {
     >
       <MaterialCommunityIcons
         name={item.icon}
-        size={16}
+        size={14}
         color={item.active ? '#fff' : '#555'}
-        style={styles.filterIcon}
       />
-      <Text
-        style={[
-          styles.categoryPillButtonText,
-          item.active && styles.activeCategoryPillText,
-        ]}
-      >
-        {item.name}
-      </Text>
+      {item.name.length <= 6 && (
+        <Text
+          style={[
+            styles.categoryPillButtonText,
+            item.active && styles.activeCategoryPillText,
+          ]}
+        >
+          {item.name}
+        </Text>
+      )}
+      {item.name.length > 6 && (
+        <Text
+          style={[
+            styles.categoryPillButtonText,
+            item.active && styles.activeCategoryPillText,
+          ]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {item.name}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 
@@ -688,15 +700,17 @@ export default function WorkoutsScreen() {
         </View>
       </View>
 
-      {/* Filter Categories */}
-      <FlatList
-        data={quickFilters}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        renderItem={renderCategoryItem}
-        keyExtractor={(item) => item.name}
-        contentContainerStyle={styles.categoriesContainer}
-      />
+      {/* Filter Categories - MODIFIED FOR FIX */}
+      <View style={styles.filterCategoriesWrapper}>
+        <FlatList
+          data={quickFilters}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          renderItem={renderCategoryItem}
+          keyExtractor={(item) => item.name}
+          contentContainerStyle={styles.categoriesContainer}
+        />
+      </View>
 
       {isLoading ? (
         <View style={styles.loaderContainer}>
@@ -712,6 +726,7 @@ export default function WorkoutsScreen() {
             { useNativeDriver: false }
           )}
           scrollEventThrottle={16}
+          contentContainerStyle={styles.scrollViewContent} // Added for better spacing
         >
           {/* Featured Workouts */}
           <View style={styles.sectionContainer}>
@@ -865,34 +880,42 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   // Category filter styles
+  // Category filter styles - FIXED STYLES HERE
+  filterCategoriesWrapper: {
+    height: 40, // Fixed height container for categories
+    marginBottom: 5, // Add some margin at the bottom
+  },
   categoriesContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 0,
   },
   categoryPillButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 14, // Increased horizontal padding
+    paddingVertical: 8, // Increased vertical padding
     backgroundColor: '#f0f0f0',
-    borderRadius: 30,
-    marginRight: 10,
+    borderRadius: 16,
+    marginRight: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
+    elevation: 0,
+    height: 32, // Fixed height for all pills
   },
   activeCategoryPill: {
     backgroundColor: '#09355c',
   },
   filterIcon: {
-    marginRight: 6,
+    marginRight: 3,
+    fontSize: 12,
   },
   categoryPillButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13, // Slightly larger font
+    fontWeight: '500',
     color: '#555',
+    marginLeft: 4, // Added space between icon and text
   },
   activeCategoryPillText: {
     color: '#fff',
@@ -1171,5 +1194,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  scrollViewContent: {
+    paddingTop: 5, // Small padding at the top of content
   },
 });
