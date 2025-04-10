@@ -1,32 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  ScrollView, 
-  TouchableOpacity, 
-  Alert 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { getDatabase, ref, push, set, onValue, remove } from 'firebase/database';
+import {
+  getDatabase,
+  ref,
+  push,
+  set,
+  onValue,
+  remove,
+} from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
 import NavBar from '../components/NavBar';
 import { setupActivityListener } from '../services/fetchUserActivities';
 
-// Utility to parse dates in MM/DD/YYYY or ISO format
-const parseActivityDate = (dateStr) => {
-  const parts = dateStr.split('/');
-  if (parts.length === 3) {
-    return new Date(parts[2], parts[0] - 1, parts[1]);
+// Define sub-categories for each main goal category
+export const subCategories = {
+  Cardio: [
+    { label: 'Jump Rope', value: 'Jump Rope' },
+    { label: 'Running', value: 'Running' },
+    { label: 'Walking', value: 'Walking' },
+  ],
+  Strength: [
+    { label: 'Bench Press', value: 'Bench Press' },
+    { label: 'DeadLift', value: 'DeadLift' },
+    { label: 'Squats', value: 'Squats' },
+  ],
+  Yoga: [
+    {
+      label: 'Downward Dog (Adho Mukha Svanasana)',
+      value: 'Downward Dog (Adho Mukha Svanasana)',
+    },
+  ],
+};
+
+// Utility to handle timestamps and string dates
+const parseActivityDate = (dateValue) => {
+  if (!dateValue) return new Date();
+  if (typeof dateValue === 'number') return new Date(dateValue);
+  if (dateValue instanceof Date) return dateValue;
+  if (typeof dateValue === 'string') {
+    if (dateValue.includes('/')) {
+      const parts = dateValue.split('/');
+      if (parts.length === 3) {
+        return new Date(parts[2], parts[0] - 1, parts[1]);
+      }
+    }
+    return new Date(dateValue);
   }
-  return new Date(dateStr);
+  return new Date();
 };
 
 const MyGoalsScreen = () => {
-  // States
+  // Form & goal list states
   const [selectedCategory, setSelectedCategory] = useState('Select Goal');
+  const [subCategory, setSubCategory] = useState('');
   const [goalDeadline, setGoalDeadline] = useState(new Date());
   const [cardioType, setCardioType] = useState('Steps');
   const [cardioSteps, setCardioSteps] = useState('');
@@ -38,6 +77,13 @@ const MyGoalsScreen = () => {
   const [activities, setActivities] = useState({});
   const todayDate = new Date();
 
+  // States for editing
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [editSubCategory, setEditSubCategory] = useState('');
+  const [editDeadline, setEditDeadline] = useState(new Date());
+  const [editCardioSteps, setEditCardioSteps] = useState('');
+  const [editCardioDuration, setEditCardioDuration] = useState('');
+
   // Fetch goals from Firebase
   useEffect(() => {
     const fetchGoals = async () => {
@@ -48,7 +94,10 @@ const MyGoalsScreen = () => {
         onValue(goalsRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.val();
-            const goalsArray = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+            const goalsArray = Object.entries(data).map(([id, value]) => ({
+              id,
+              ...value,
+            }));
             setUserGoals(goalsArray);
           } else {
             setUserGoals([]);
@@ -65,7 +114,6 @@ const MyGoalsScreen = () => {
     return () => unsubscribe();
   }, []);
 
-  // Aggregate activity entries for a given goal
   const aggregateActivityForGoal = (goal, categoryActivities) => {
     let aggregated = { steps: 0, duration: 0, sessions: 0 };
 
@@ -75,6 +123,12 @@ const MyGoalsScreen = () => {
     goalEnd.setHours(23, 59, 59, 999);
 
     Object.values(categoryActivities).forEach((entry) => {
+      if (goal.subCategory) {
+        if (!entry.subCategory || entry.subCategory !== goal.subCategory) {
+          return;
+        }
+      }
+
       const entryDate = parseActivityDate(entry.date);
       entryDate.setHours(0, 0, 0, 0);
 
@@ -107,7 +161,9 @@ const MyGoalsScreen = () => {
           const targetSteps = Number(goal.cardioSteps) || 0;
           const targetDuration = Number(goal.cardioDuration) || 0;
           if (targetSteps > 0 && targetDuration > 0) {
-            meetsTarget = aggregated.steps >= targetSteps && aggregated.duration >= targetDuration;
+            meetsTarget =
+              aggregated.steps >= targetSteps &&
+              aggregated.duration >= targetDuration;
           } else if (targetSteps > 0) {
             meetsTarget = aggregated.steps >= targetSteps;
           } else if (targetDuration > 0) {
@@ -131,27 +187,27 @@ const MyGoalsScreen = () => {
   const handleSubmit = () => {
     const errors = [];
 
-    if (selectedCategory === 'Select Goal') {
-      errors.push("Please select a valid goal category.");
+    if (selectedCategory === 'Select Goal' || subCategory === '') {
+      errors.push('Please select a valid goal category and sub-category.');
     } else {
       if (selectedCategory === 'Cardio') {
         if (cardioType === 'Steps' && cardioSteps.trim() === '') {
-          errors.push("Please enter steps.");
+          errors.push('Please enter steps.');
         }
         if (cardioType === 'Duration' && cardioDuration.trim() === '') {
-          errors.push("Please enter duration.");
+          errors.push('Please enter duration.');
         }
       }
       if (selectedCategory === 'Strength' && strengthSessions.trim() === '') {
-        errors.push("Please specify the number of Strength sessions.");
+        errors.push('Please specify the number of Strength sessions.');
       }
       if (selectedCategory === 'Yoga' && yogaDuration.trim() === '') {
-        errors.push("Please specify the Yoga duration.");
+        errors.push('Please specify the Yoga duration.');
       }
     }
 
     if (errors.length > 0) {
-      Alert.alert("Validation Error", errors.join('\n'));
+      Alert.alert('Validation Error', errors.join('\n'));
       return;
     }
 
@@ -165,6 +221,11 @@ const MyGoalsScreen = () => {
         dateCreated: new Date().getTime(),
         completed: false,
       };
+
+      // Include sub-category if selected
+      if (subCategory) {
+        goalData = { ...goalData, subCategory };
+      }
 
       switch (selectedCategory) {
         case 'Cardio':
@@ -182,7 +243,7 @@ const MyGoalsScreen = () => {
           break;
       }
 
-      const goalsRef = ref(db, `Users/${uid}/Goals`);
+      const goalsRef = ref(db, `Users/${user.uid}/Goals`);
       const newGoalRef = push(goalsRef);
 
       set(newGoalRef, goalData)
@@ -191,7 +252,7 @@ const MyGoalsScreen = () => {
           resetForm();
         })
         .catch((error) => {
-          console.error("Failed to save goal data: ", error);
+          console.error('Failed to save goal data: ', error);
           Alert.alert('Error', 'Failed to save goal. Please try again.');
         });
     }
@@ -200,6 +261,7 @@ const MyGoalsScreen = () => {
   // Reset all form fields
   const resetForm = () => {
     setSelectedCategory('Select Goal');
+    setSubCategory('');
     setGoalDeadline(new Date());
     setCardioSteps('');
     setCardioDuration('');
@@ -208,7 +270,7 @@ const MyGoalsScreen = () => {
     setShowGoalForm(false);
   };
 
-  // Date picker handler
+  // Date picker handler for main form
   const handleDateChange = (event, selectedDate) => {
     if (event.type === 'dismissed') return;
     setGoalDeadline(selectedDate || goalDeadline);
@@ -230,10 +292,15 @@ const MyGoalsScreen = () => {
             if (user) {
               const goalRef = ref(db, `Users/${user.uid}/Goals/${goalId}`);
               remove(goalRef)
-                .then(() => Alert.alert('Success', 'Goal deleted successfully!'))
+                .then(() =>
+                  Alert.alert('Success', 'Goal deleted successfully!')
+                )
                 .catch((error) => {
                   console.error('Error deleting goal: ', error);
-                  Alert.alert('Error', 'Error deleting goal. Please try again.');
+                  Alert.alert(
+                    'Error',
+                    'Error deleting goal. Please try again.'
+                  );
                 });
             }
           },
@@ -243,16 +310,84 @@ const MyGoalsScreen = () => {
     );
   };
 
-  // Mark a goal as complete
+  // Mark goal as complete
   const handleCompleteGoal = (goal) => {
     const db = getDatabase();
     const user = auth.currentUser;
     if (user) {
       const goalRef = ref(db, `Users/${user.uid}/Goals/${goal.id}`);
       set(goalRef, { ...goal, completed: true })
-        .then(() => console.log('Goal marked as complete!'))
+        .then(() => {
+          Alert.alert('Success', 'Goal marked as complete!');
+        })
         .catch((error) => {
           console.error('Error updating goal: ', error);
+          Alert.alert('Error', 'Error updating goal: ' + error.message);
+        });
+    }
+  };
+
+  // Open edit modal and pre-fill fields
+  // const openEditModal = (goal) => {
+  //   setEditingGoal(goal);
+  //   setEditSubCategory(goal.subCategory || '');
+  //   setEditDeadline(new Date(goal.deadline));
+  //   setEditCardioSteps(goal.cardioSteps || '');
+  // };
+  const openEditModal = (goal) => {
+    setEditingGoal(goal);
+    setEditSubCategory(goal.subCategory || '');
+    setEditDeadline(new Date(goal.deadline));
+    if (goal.category === 'Cardio') {
+      if (goal.cardioSteps !== undefined) {
+        setEditCardioSteps(goal.cardioSteps || '');
+        setEditCardioDuration('');
+      } else if (goal.cardioDuration !== undefined) {
+        setEditCardioDuration(goal.cardioDuration || '');
+        setEditCardioSteps('');
+      }
+    }
+  };
+
+  // Save changes from the edit modal
+  const handleSaveEdit = () => {
+    if (editSubCategory === '') {
+      Alert.alert(
+        'Validation Error',
+        'please select a sub category to your workout'
+      );
+      return;
+    }
+    if (!editingGoal) return;
+    const db = getDatabase();
+    const user = auth.currentUser;
+    if (user) {
+      const goalRef = ref(db, `Users/${user.uid}/Goals/${editingGoal.id}`);
+      // Prepare updated fields including the deadline update
+      let updatedFields = {
+        subCategory: editSubCategory,
+        deadline: editDeadline.getTime(), // update the deadline
+      };
+      if (editingGoal.category === 'Cardio') {
+        if (editingGoal.cardioSteps !== undefined) {
+          updatedFields = { ...updatedFields, cardioSteps: editCardioSteps };
+        } else if (editingGoal.cardioDuration !== undefined) {
+          updatedFields = {
+            ...updatedFields,
+            cardioDuration: editCardioDuration,
+          };
+        }
+      }
+
+      // Merge updated fields with the existing goal data
+      set(goalRef, { ...editingGoal, ...updatedFields })
+        .then(() => {
+          Alert.alert('Success', 'Goal updated successfully!');
+          setEditingGoal(null);
+        })
+        .catch((error) => {
+          console.error('Error updating goal: ', error);
+          Alert.alert('Error', 'Failed to update goal. Please try again.');
         });
     }
   };
@@ -286,7 +421,11 @@ const MyGoalsScreen = () => {
           style={[styles.tab, cardioType === tab && styles.activeTab]}
           onPress={() => setCardioType(tab)}
         >
-          <Text style={[styles.tabText, cardioType === tab && styles.activeTabText]}>{tab}</Text>
+          <Text
+            style={[styles.tabText, cardioType === tab && styles.activeTabText]}
+          >
+            {tab}
+          </Text>
           {cardioType === tab && <View style={styles.activeIndicator} />}
         </TouchableOpacity>
       ))}
@@ -311,7 +450,10 @@ const MyGoalsScreen = () => {
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={selectedCategory}
-                onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+                onValueChange={(itemValue) => {
+                  setSelectedCategory(itemValue);
+                  setSubCategory(''); // Reset sub-category when main category changes
+                }}
                 style={styles.picker}
               >
                 <Picker.Item label="Select Goal" value="Select Goal" />
@@ -320,6 +462,26 @@ const MyGoalsScreen = () => {
                 <Picker.Item label="Yoga" value="Yoga" />
               </Picker>
             </View>
+            {/* Render sub-category picker if available */}
+            {selectedCategory !== 'Select Goal' &&
+              subCategories[selectedCategory] && (
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={subCategory}
+                    onValueChange={(itemValue) => setSubCategory(itemValue)}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Select Sub Category" value="" />
+                    {subCategories[selectedCategory].map((subCat, index) => (
+                      <Picker.Item
+                        key={index}
+                        label={subCat.label}
+                        value={subCat.value}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+              )}
 
             <View style={styles.formContainer}>
               {selectedCategory === 'Cardio' && (
@@ -375,7 +537,10 @@ const MyGoalsScreen = () => {
                   onChange={handleDateChange}
                 />
               </View>
-              <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSubmit}
+              >
                 <Text style={styles.buttonText}>Save Goal</Text>
               </TouchableOpacity>
             </View>
@@ -390,38 +555,87 @@ const MyGoalsScreen = () => {
               <View key={category}>
                 <Text style={styles.header}>{category} Goals</Text>
                 {goals.map((goal) => {
-                  const aggregated = aggregateActivityForGoal(goal, activities[goal.category] || {});
+                  const aggregated = aggregateActivityForGoal(
+                    goal,
+                    activities[goal.category] || {}
+                  );
                   return (
                     <View key={goal.id} style={styles.goalItem}>
-                      <Text style={styles.goalText}>{goal.category} Goal</Text>
-                      <Text style={styles.goalStatus}>{computeGoalStatus(goal)}</Text>
+                      <Text style={styles.goalText}>
+                        {goal.category} Goal{' '}
+                        {goal.subCategory && `- ${goal.subCategory}`}
+                      </Text>
+                      <Text style={styles.goalStatus}>
+                        {computeGoalStatus(goal)}
+                      </Text>
                       <Text style={styles.deadlineText}>
                         Deadline: {new Date(goal.deadline).toLocaleDateString()}
                       </Text>
-                      {goal.category === 'Cardio' && (
-                        <Text style={styles.progressText}>
-                        {goal.cardioSteps 
-                          ? `Steps: ${aggregated.steps} / ${goal.cardioSteps}` 
-                          : `Duration: ${aggregated.duration.toFixed(1)} / ${goal.cardioDuration} mins`
-                        }
-                      </Text>
+                      {!goal.completed ? (
+                        <>
+                          {goal.category === 'Cardio' && (
+                            <Text style={styles.progressText}>
+                              {goal.cardioSteps
+                                ? `Steps: ${aggregated.steps} / ${goal.cardioSteps}`
+                                : `Duration: ${aggregated.duration.toFixed(
+                                    1
+                                  )} / ${goal.cardioDuration} mins`}
+                            </Text>
+                          )}
+                          {goal.category === 'Strength' && (
+                            <Text style={styles.progressText}>
+                              Sessions: {aggregated.sessions} /{' '}
+                              {goal.strengthSessions}
+                            </Text>
+                          )}
+                          {goal.category === 'Yoga' && (
+                            <Text style={styles.progressText}>
+                              Duration: {aggregated.duration.toFixed(1)} /{' '}
+                              {goal.yogaDuration} mins
+                            </Text>
+                          )}
+                          <TouchableOpacity
+                            style={styles.completeButton}
+                            onPress={() => handleCompleteGoal(goal)}
+                          >
+                            <Text style={styles.buttonText}>
+                              Mark as Complete
+                            </Text>
+                          </TouchableOpacity>
+                          {/* Edit button placed under the complete button */}
+                          <TouchableOpacity
+                            style={styles.editButton}
+                            onPress={() => openEditModal(goal)}
+                          >
+                            <Text style={styles.buttonText}>Edit</Text>
+                          </TouchableOpacity>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={styles.completedText}>Completed</Text>
+                          {goal.category === 'Cardio' && (
+                            <Text style={styles.progressText}>
+                              {goal.cardioSteps
+                                ? `Steps: ${goal.cardioSteps}`
+                                : `Duration: ${goal.cardioDuration} mins`}
+                            </Text>
+                          )}
+                          {goal.category === 'Strength' && (
+                            <Text style={styles.progressText}>
+                              Sessions: {goal.strengthSessions}
+                            </Text>
+                          )}
+                          {goal.category === 'Yoga' && (
+                            <Text style={styles.progressText}>
+                              Duration: {goal.yogaDuration} mins
+                            </Text>
+                          )}
+                        </>
                       )}
-                      {goal.category === 'Strength' && (
-                        <Text style={styles.progressText}>
-                          Sessions: {aggregated.sessions} / {goal.strengthSessions}
-                        </Text>
-                      )}
-                      {goal.category === 'Yoga' && (
-                        <Text style={styles.progressText}>
-                          Duration: {aggregated.duration.toFixed(1)} / {goal.yogaDuration} mins
-                        </Text>
-                      )}
-                      {!goal.completed && (
-                        <TouchableOpacity style={styles.completeButton} onPress={() => handleCompleteGoal(goal)}>
-                          <Text style={styles.buttonText}>Mark as Complete</Text>
-                        </TouchableOpacity>
-                      )}
-                      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteGoal(goal.id)}>
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => handleDeleteGoal(goal.id)}
+                      >
                         <Text style={styles.buttonText}>Delete Goal</Text>
                       </TouchableOpacity>
                     </View>
@@ -432,20 +646,103 @@ const MyGoalsScreen = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* Edit Modal */}
+      <Modal visible={!!editingGoal} animationType="slide" transparent={true}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalHeader}>Edit Goal</Text>
+              {/* Sub-Category Picker */}
+              {editingGoal && subCategories[editingGoal.category] && (
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={editSubCategory}
+                    themeVariant="light"
+                    onValueChange={(itemValue) => setEditSubCategory(itemValue)}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Select Sub Category" value="" />
+                    {subCategories[editingGoal.category].map(
+                      (subCat, index) => (
+                        <Picker.Item
+                          key={index}
+                          label={subCat.label}
+                          value={subCat.value}
+                        />
+                      )
+                    )}
+                  </Picker>
+                </View>
+              )}
+              {/* DateTimePicker for updating the deadline */}
+              <View style={styles.dateFieldContainer}>
+                <Text style={styles.modalTextLabel}>Edit Due Date</Text>
+                <DateTimePicker
+                  value={editDeadline}
+                  mode="date"
+                  display="default"
+                  themeVariant="light"
+                  minimumDate={todayDate}
+                  onChange={(e, selectedDate) => {
+                    if (e.type !== 'dismissed' && selectedDate) {
+                      setEditDeadline(selectedDate);
+                    }
+                  }}
+                />
+              </View>
+              {editingGoal &&
+                editingGoal.category === 'Cardio' &&
+                (editingGoal.cardioSteps !== undefined ? (
+                  <>
+                    <Text>Edit steps</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Edit steps"
+                      value={editCardioSteps}
+                      onChangeText={setEditCardioSteps}
+                      keyboardType="numeric"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Text>Edit duration in minutes</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Edit duration in minutes"
+                      value={editCardioDuration}
+                      onChangeText={setEditCardioDuration}
+                      keyboardType="numeric"
+                    />
+                  </>
+                ))}
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.buttonText}>Save Changes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => setEditingGoal(null)}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
       <NavBar />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9f9f9',
-  },
-  scrollContainer: {
-    paddingBottom: 90,
-    paddingHorizontal: 15,
-  },
+  container: { flex: 1, backgroundColor: '#f9f9f9' },
+  scrollContainer: { paddingBottom: 90, paddingHorizontal: 15 },
   createGoalButton: {
     backgroundColor: '#09355c',
     padding: 12,
@@ -454,11 +751,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     alignItems: 'center',
   },
-  createGoalButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  createGoalButtonText: { color: '#ffffff', fontSize: 18, fontWeight: '600' },
   goalContainer: {
     marginBottom: 25,
     padding: 15,
@@ -470,23 +763,14 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
-  header: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#09355c',
-    marginBottom: 15,
-  },
+  header: { fontSize: 24, fontWeight: '700', marginBottom: 15 },
   pickerContainer: {
     backgroundColor: '#f0f0f0',
     borderRadius: 6,
     marginBottom: 15,
   },
-  picker: {
-    width: '100%',
-  },
-  formContainer: {
-    marginBottom: 10,
-  },
+  picker: { width: '100%' },
+  formContainer: { marginBottom: 10 },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -495,9 +779,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#fff',
   },
-  dateFieldContainer: {
-    marginBottom: 15,
-  },
+  dateFieldContainer: { marginBottom: 15 },
   dateLabel: {
     fontSize: 16,
     fontWeight: '600',
@@ -510,9 +792,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  existingGoalsContainer: {
-    marginBottom: 30,
-  },
+  existingGoalsContainer: { marginBottom: 30 },
   noGoalsText: {
     fontSize: 16,
     color: '#666',
@@ -545,11 +825,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: 6,
   },
-  deadlineText: {
-    fontSize: 14,
-    color: '#444',
-    marginBottom: 6,
-  },
+  deadlineText: { fontSize: 14, color: '#444', marginBottom: 6 },
   progressText: {
     fontSize: 15,
     color: '#0c4f8a',
@@ -558,6 +834,13 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     backgroundColor: '#4caf50',
+    marginTop: 5,
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: '#ff9800',
     marginTop: 5,
     paddingVertical: 10,
     borderRadius: 6,
@@ -587,21 +870,52 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: '#e5e5e5',
   },
-  activeTab: {
-    backgroundColor: '#09355c',
-  },
-  tabText: {
-    color: '#09355c',
-    fontWeight: '600',
-  },
-  activeTabText: {
-    color: '#fff',
-  },
+  activeTab: { backgroundColor: '#09355c' },
+  tabText: { color: '#09355c', fontWeight: '600' },
+  activeTabText: { color: '#fff' },
   activeIndicator: {
     marginTop: 4,
     height: 3,
     backgroundColor: '#fff',
     borderRadius: 2,
+  },
+
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  editButton: {
+    backgroundColor: '#ff9800',
+    marginTop: 5,
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#f9f9f9', // Changed from pure white (#fff) to light grey for contrast
+    width: '85%',
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+  },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 15,
+    color: '#09355c', // Dark blue text ensures readability
+    textAlign: 'center',
+  },
+  modalTextLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333', // A dark grey for additional modal text
+    marginBottom: 5,
   },
 });
 

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Pedometer } from 'expo-sensors';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration, handleSubmit, isTracking, setIsTracking }) => {
+const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration, isTracking, setIsTracking, selectedSubCategory, setSelectedSubCategory, handleSubmit }) => {
     const lastStepCount = useRef(0);
     const timerInterval = useRef(null);
 
@@ -62,10 +62,27 @@ const CardioComponent = ({ currentSteps, setCurrentSteps, duration, setDuration,
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
+    const renderWorkoutText = () => {
+        switch (selectedSubCategory) {
+          case 'Jump Rope':
+            return 'Jumps';
+          case 'Running':
+            return 'Steps';
+          case 'Walking':
+            return 'Steps';
+          default:
+            return 'Steps';
+        }
+      };
+
+
+
     return (
         <View style={styles.container}>
+
+             {/* setSelectedSubCategory */}
             <Text style={styles.header}>Cardio Workout</Text>
-            <Text style={styles.stepsCount}>Steps: {currentSteps}</Text>
+            <Text style={styles.stepsCount}>{renderWorkoutText()}: {currentSteps}</Text>
             <Text style={styles.distanceText}>Distance: {calculateDistance(currentSteps)} meters</Text>
             <Text style={styles.timerText}>Time: {formatTime(duration)}</Text>
 

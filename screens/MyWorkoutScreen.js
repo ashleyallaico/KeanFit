@@ -4,6 +4,7 @@ import { getDatabase, ref, get, set } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
 import NavBar from '../components/NavBar';
 import { FontAwesome } from '@expo/vector-icons';
+import Disclaimer from '../components/Disclaimer';
 
 
 const MyWorkoutScreen = () => {
@@ -125,11 +126,13 @@ const MyWorkoutScreen = () => {
                             />
                         </View>
                     ))}
+                    <Disclaimer/>
                 </ScrollView>
             ) : (
                 <Text style={styles.noWorkoutsText}>No workouts saved yet.</Text>
             )}
             <NavBar />
+            
         </View>
     );
 };
