@@ -17,11 +17,13 @@ import {
 } from '../services/fetchUserActivities';
 import NavBar from './NavBar';
 import convertTimestampToDateString from '../utils/formatHelpers';
+import { useNavigation } from '@react-navigation/native';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const UserStats = () => {
   const [activities, setActivities] = useState({});
+  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('Cardio'); // Default active tab
   const [activeTimeFilter, setActiveTimeFilter] = useState('Last 7 Days'); // Default time filter
   const [isDeleting, setIsDeleting] = useState(false);
@@ -34,6 +36,12 @@ const UserStats = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  });
 
   const handleTabPress = (tabName) => {
     setActiveTab(tabName);
