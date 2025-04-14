@@ -3,19 +3,18 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
-import SettingsScreen from '../screens/SettingsScreen'; 
-import UpdatePasswordScreen from '../screens/UpdatePasswordScreen'; 
-import TrackWorkoutScreen from '../screens/TrackWorkoutScreen'; 
-import ProfileScreen from '../screens/ProfileScreen'; 
-import MyWorkoutScreen from '../screens/MyWorkoutScreen'; 
-import MyGoalsScreen from '../screens/MyGoalsScreen'; 
-import WorkoutsScreen from '../screens/WorkoutsScreen'; 
+import SettingsScreen from '../screens/SettingsScreen';
+import UpdatePasswordScreen from '../screens/UpdatePasswordScreen';
+import TrackWorkoutScreen from '../screens/TrackWorkoutScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import MyWorkoutScreen from '../screens/MyWorkoutScreen';
+import MyGoalsScreen from '../screens/MyGoalsScreen';
+import WorkoutsScreen from '../screens/WorkoutsScreen';
 import WorkoutPreferences from '../screens/WorkoutPreferences';
 import StepTrackingScreen from '../screens/StepTrackingScreen';
 import MyStepsScreen from '../screens/MyStepsScreen';
 import UserStats from '../components/UserStats';
 import MealPreferencesScreen from '../screens/MealPreferencesScreen';
-
 
 const Stack = createNativeStackNavigator();
 
@@ -73,12 +72,12 @@ const AppNavigator = () => {
       <Stack.Screen
         name="MyWorkout"
         component={MyWorkoutScreen}
-        options={{ title: 'My Workouts', headerBackVisible: false  }}
+        options={{ title: 'My Workouts', headerBackVisible: false }}
       />
       <Stack.Screen
         name="MyGoalsScreen"
         component={MyGoalsScreen}
-        options={{ title: 'Fitness Goals', headerBackVisible: false  }}
+        options={{ title: 'Fitness Goals', headerBackVisible: false }}
       />
       <Stack.Screen
         name="Workouts"
@@ -90,20 +89,20 @@ const AppNavigator = () => {
         component={WorkoutPreferences}
         options={{ title: 'Workout Preference', headerBackVisible: false }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="MySteps"
         component={MyStepsScreen}
-        options={{ title: 'MySteps', headerBackVisible: false  }}
+        options={{ title: 'MySteps', headerBackVisible: false }}
       />
       <Stack.Screen
         name="MyActivity"
         component={UserStats}
-        options={{ title: 'My Activities', headerBackVisible: false  }}
+        options={{ title: 'My Activities', headerBackVisible: false }}
       />
       <Stack.Screen
         name="MealPreferences"
         component={MealPreferencesScreen}
-        options={{ title: 'Meal Preferences', headerBackVisible: false  }}
+        options={{ title: 'Meal Preferences', headerBackVisible: false }}
       />
     </Stack.Navigator>
   );

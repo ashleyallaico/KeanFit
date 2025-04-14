@@ -1,7 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { setupActivityListener, deleteActivity } from '../services/fetchUserActivities';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  StatusBar,
+  Platform,
+} from 'react-native';
+import {
+  setupActivityListener,
+  deleteActivity,
+} from '../services/fetchUserActivities';
+import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import NavBar from './NavBar';
 import convertTimestampToDateString from '../utils/formatHelpers';
 
@@ -24,19 +37,35 @@ const UserStats = () => {
 
   // Category Tabs component
   const CategoryTabs = () => {
-    const tabs = ['Cardio', 'Strength Training', 'Yoga'];
+    const tabs = [
+      { name: 'Cardio', icon: 'running' },
+      { name: 'Strength Training', icon: 'dumbbell' },
+      { name: 'Yoga', icon: 'om' },
+    ];
+
     return (
       <View style={styles.tabContainer}>
-        {tabs.map(tab => (
+        {tabs.map((tab) => (
           <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => handleTabPress(tab)}
+            key={tab.name}
+            style={[styles.tab, activeTab === tab.name && styles.activeTab]}
+            onPress={() => handleTabPress(tab.name)}
           >
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-              {tab}
+            <FontAwesome5
+              name={tab.icon}
+              size={16}
+              color={activeTab === tab.name ? '#053559' : '#777'}
+              style={styles.tabIcon}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab.name && styles.activeTabText,
+              ]}
+            >
+              {tab.name}
             </Text>
-            {activeTab === tab && <View style={styles.activeIndicator} />}
+            {activeTab === tab.name && <View style={styles.activeIndicator} />}
           </TouchableOpacity>
         ))}
       </View>
@@ -48,13 +77,21 @@ const UserStats = () => {
     const filters = ['Last 7 Days', 'Last Month', 'Last Year'];
     return (
       <View style={styles.timeFilterContainer}>
-        {filters.map(filter => (
+        {filters.map((filter) => (
           <TouchableOpacity
             key={filter}
-            style={[styles.timeFilterTab, activeTimeFilter === filter && styles.activeTimeFilterTab]}
+            style={[
+              styles.timeFilterTab,
+              activeTimeFilter === filter && styles.activeTimeFilterTab,
+            ]}
             onPress={() => setActiveTimeFilter(filter)}
           >
-            <Text style={[styles.timeFilterText, activeTimeFilter === filter && styles.activeTimeFilterText]}>
+            <Text
+              style={[
+                styles.timeFilterText,
+                activeTimeFilter === filter && styles.activeTimeFilterText,
+              ]}
+            >
               {filter}
             </Text>
           </TouchableOpacity>
@@ -63,30 +100,33 @@ const UserStats = () => {
     );
   };
 
-  // Delete activity handler remains the same
+  // Delete activity handler
   const handleDeleteActivity = (category, activityId) => {
     Alert.alert(
-      "Delete Activity",
-      "Are you sure you want to delete this activity? This cannot be undone.",
+      'Delete Activity',
+      'Are you sure you want to delete this activity? This cannot be undone.',
       [
         {
-          text: "Cancel",
-          style: "cancel"
+          text: 'Cancel',
+          style: 'cancel',
         },
-        { 
-          text: "Delete", 
+        {
+          text: 'Delete',
           onPress: () => {
             deleteActivity(category, activityId)
               .then(() => {
-                Alert.alert("Success", "Activity deleted successfully.");
+                Alert.alert('Success', 'Activity deleted successfully.');
               })
-              .catch(error => {
-                Alert.alert("Error", "Failed to delete activity. Please try again.");
-                console.error("Delete error:", error);
+              .catch((error) => {
+                Alert.alert(
+                  'Error',
+                  'Failed to delete activity. Please try again.'
+                );
+                console.error('Delete error:', error);
               });
           },
-          style: "destructive"
-        }
+          style: 'destructive',
+        },
       ]
     );
   };
@@ -130,7 +170,8 @@ const UserStats = () => {
     const result = {};
     Object.entries(activitiesObj).forEach(([category, entries]) => {
       // For the "Strength Training" tab, the data is under "Strength"
-      const categoryToMatch = activeTab === 'Strength Training' ? 'Strength' : activeTab;
+      const categoryToMatch =
+        activeTab === 'Strength Training' ? 'Strength' : activeTab;
       if (category === categoryToMatch) {
         result[category] = entries;
       }
@@ -147,69 +188,276 @@ const UserStats = () => {
     setIsDeleting(!isDeleting);
   };
 
+  // Get the appropriate icon for the category
+  const getCategoryIcon = (category, subCategory) => {
+    if (category === 'Cardio') {
+      if (subCategory === 'Running') return 'running';
+      if (subCategory === 'Cycling') return 'bicycle';
+      if (subCategory === 'Swimming') return 'swimming';
+      return 'heartbeat';
+    } else if (category === 'Strength') {
+      if (subCategory === 'Arms') return 'hand-rock';
+      if (subCategory === 'Legs') return 'shoe-prints';
+      if (subCategory === 'Core') return 'dumbbell';
+      return 'dumbbell';
+    } else if (category === 'Yoga') {
+      return 'om';
+    }
+    return 'star';
+  };
+
   // Activity card component
-  const ActivityCard = ({ category, entryId, entryDetails, showDeleteButton }) => (
-    <View key={entryId} style={styles.entryCard}>
-      <Text style={styles.entryText}>
-        {entryDetails.steps ? <Text><Text style={styles.labelText}>Steps: </Text>{entryDetails.steps}{'\n'}</Text> : ''}
-        {entryDetails.reps ? (
-          <>
-            <Text><Text style={styles.labelText}>Sub-category: </Text>{entryDetails.subCategory}{'\n'}</Text>
-            <Text><Text style={styles.labelText}>Weight: </Text>{entryDetails.weight} lbs{'\n'}</Text>
-            <Text><Text style={styles.labelText}>Repetitions: </Text>{entryDetails.reps}{'\n'}</Text>
-            <Text><Text style={styles.labelText}>Sets: </Text>{entryDetails.sets}</Text>
-          </>
-        ) : ''}
-        {entryDetails.cardioDuration ? (
-          <Text>
-            <Text><Text style={styles.labelText}>Sub-category: </Text>{entryDetails.subCategory}{'\n'}</Text>
-            <Text style={styles.labelText}>Duration: </Text>
-            {Math.floor(entryDetails.cardioDuration / 60)} min, {Math.floor(entryDetails.cardioDuration % 60)} secs
-          </Text>
-        ) : ''}
-        {entryDetails.yogaDuration ? (
-          <Text>
-            <Text><Text style={styles.labelText}>Sub-category: </Text>{entryDetails.subCategory}{'\n'}</Text>
-            <Text style={styles.labelText}>Duration: </Text>
-            {Math.floor(entryDetails.yogaDuration / 60)} min, {Math.floor(entryDetails.yogaDuration % 60)} secs
-          </Text>
-        ) : ''}
-      </Text>
-  
-      <Text style={styles.entryDate}>{convertTimestampToDateString(entryDetails.date)}</Text>
-  
-      {showDeleteButton && (
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteActivity(category, entryId)}
-        >
-          <Text style={styles.deleteButtonText}>Delete</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+  const ActivityCard = ({
+    category,
+    entryId,
+    entryDetails,
+    showDeleteButton,
+  }) => {
+    const iconName = getCategoryIcon(category, entryDetails.subCategory);
+
+    return (
+      <View key={entryId} style={styles.entryCard}>
+        <View style={styles.cardHeader}>
+          <View style={styles.activityIconContainer}>
+            <FontAwesome5 name={iconName} size={16} color="#fff" />
+          </View>
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.cardTitle}>
+              {entryDetails.subCategory || category}
+            </Text>
+            <Text style={styles.entryDate}>
+              {convertTimestampToDateString(entryDetails.date)}
+            </Text>
+          </View>
+          {showDeleteButton && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteActivity(category, entryId)}
+            >
+              <FontAwesome name="trash" size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.cardContent}>
+          {/* Cardio */}
+          {entryDetails.cardioDuration && (
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <FontAwesome5
+                  name="clock"
+                  size={14}
+                  color="#053559"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statText}>
+                  <Text style={styles.statValue}>
+                    {Math.floor(entryDetails.cardioDuration / 60)} min,{' '}
+                    {Math.floor(entryDetails.cardioDuration % 60)} sec
+                  </Text>
+                </Text>
+              </View>
+              {entryDetails.distance && (
+                <View style={styles.statItem}>
+                  <FontAwesome5
+                    name="route"
+                    size={14}
+                    color="#053559"
+                    style={styles.statIcon}
+                  />
+                  <Text style={styles.statText}>
+                    <Text style={styles.statValue}>
+                      {entryDetails.distance} km
+                    </Text>
+                  </Text>
+                </View>
+              )}
+              {entryDetails.calories && (
+                <View style={styles.statItem}>
+                  <FontAwesome5
+                    name="fire"
+                    size={14}
+                    color="#053559"
+                    style={styles.statIcon}
+                  />
+                  <Text style={styles.statText}>
+                    <Text style={styles.statValue}>
+                      {entryDetails.calories} cal
+                    </Text>
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Strength Training */}
+          {entryDetails.reps && (
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <FontAwesome5
+                  name="weight"
+                  size={14}
+                  color="#053559"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statText}>
+                  <Text style={styles.statValue}>
+                    {entryDetails.weight} lbs
+                  </Text>
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <FontAwesome5
+                  name="redo"
+                  size={14}
+                  color="#053559"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statText}>
+                  <Text style={styles.statValue}>{entryDetails.sets} sets</Text>
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <FontAwesome5
+                  name="sort-numeric-up"
+                  size={14}
+                  color="#053559"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statText}>
+                  <Text style={styles.statValue}>{entryDetails.reps} reps</Text>
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Yoga */}
+          {entryDetails.yogaDuration && (
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <FontAwesome5
+                  name="clock"
+                  size={14}
+                  color="#053559"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statText}>
+                  <Text style={styles.statValue}>
+                    {Math.floor(entryDetails.yogaDuration / 60)} min,{' '}
+                    {Math.floor(entryDetails.yogaDuration % 60)} sec
+                  </Text>
+                </Text>
+              </View>
+              {entryDetails.poses && (
+                <View style={styles.statItem}>
+                  <FontAwesome5
+                    name="child"
+                    size={14}
+                    color="#053559"
+                    style={styles.statIcon}
+                  />
+                  <Text style={styles.statText}>
+                    <Text style={styles.statValue}>
+                      {entryDetails.poses} poses
+                    </Text>
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Steps */}
+          {entryDetails.steps && (
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <FontAwesome5
+                  name="shoe-prints"
+                  size={14}
+                  color="#053559"
+                  style={styles.statIcon}
+                />
+                <Text style={styles.statText}>
+                  <Text style={styles.statValue}>
+                    {entryDetails.steps} steps
+                  </Text>
+                </Text>
+              </View>
+              {entryDetails.distance && (
+                <View style={styles.statItem}>
+                  <FontAwesome5
+                    name="route"
+                    size={14}
+                    color="#053559"
+                    style={styles.statIcon}
+                  />
+                  <Text style={styles.statText}>
+                    <Text style={styles.statValue}>
+                      {entryDetails.distance} km
+                    </Text>
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {entryDetails.notes && (
+            <View style={styles.notesContainer}>
+              <Text style={styles.notesLabel}>Notes:</Text>
+              <Text style={styles.notesText}>{entryDetails.notes}</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <CategoryTabs />
-      <TimeFilterTabs />
-      
-      <View style={styles.actionContainer}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#053559"
+        translucent={true}
+      />
+
+      {/* Header */}
+      <LinearGradient
+        colors={['#053559', '#09355c']}
+        style={styles.header}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      >
+        <Text style={styles.headerTitle}>My Activities</Text>
+
         <TouchableOpacity
-          style={[styles.actionButton, isDeleting && styles.activeActionButton]}
+          style={[styles.editButton, isDeleting && styles.activeEditButton]}
           onPress={toggleDeleteMode}
         >
-          <Text style={[styles.actionButtonText, isDeleting && styles.activeActionButtonText]}>
-            {isDeleting ? 'Done' : 'Edit Activities'}
+          <FontAwesome
+            name={isDeleting ? 'check' : 'edit'}
+            size={16}
+            color="#fff"
+          />
+          <Text style={styles.editButtonText}>
+            {isDeleting ? 'Done' : 'Edit'}
           </Text>
         </TouchableOpacity>
-      </View>
-      
+      </LinearGradient>
+
+      {/* Tabs */}
+      <CategoryTabs />
+      <TimeFilterTabs />
+
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {Object.keys(filteredActivities).length > 0 ? (
           Object.entries(filteredActivities).map(([category, entries]) => (
             <View key={category} style={styles.categoryContainer}>
-              <Text style={styles.categoryTitle}>{category}</Text>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.categoryTitle}>{category}</Text>
+                <Text style={styles.entriesCount}>
+                  {Object.keys(entries).length} entries
+                </Text>
+              </View>
+
               {Object.entries(entries).map(([entryId, entryDetails]) => (
                 <ActivityCard
                   key={entryId}
@@ -223,9 +471,14 @@ const UserStats = () => {
           ))
         ) : (
           <View style={styles.noActivitiesContainer}>
+            <FontAwesome5 name="running" size={60} color="#e0e0e0" />
             <Text style={styles.noActivitiesText}>
-              No {activeTab} activities recorded in the selected time range.
+              No {activeTab} activities recorded in the{' '}
+              {activeTimeFilter.toLowerCase()}.
             </Text>
+            <TouchableOpacity style={styles.addActivityButton}>
+              <Text style={styles.addActivityButtonText}>Add Activity</Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -237,57 +490,72 @@ const UserStats = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 70,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8f9fa',
+  },
+  header: {
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 10,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  activeEditButton: {
+    backgroundColor: '#FFCB05',
+  },
+  editButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    marginLeft: 5,
   },
   scrollContainer: {
-    paddingBottom: 80,
-    paddingHorizontal: 15,
-  },
-  actionContainer: {
-    padding: 15,
-    backgroundColor: '#ffffff',
-    alignItems: 'flex-end',
-  },
-  actionButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 6,
-  },
-  activeActionButton: {
-    backgroundColor: '#09355c',
-  },
-  actionButtonText: {
-    color: '#444',
-    fontWeight: '500',
-  },
-  activeActionButtonText: {
-    color: '#ffffff',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 100,
   },
   tabContainer: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   tab: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 15,
     position: 'relative',
   },
   activeTab: {
-    borderBottomColor: '#09355c',
+    backgroundColor: 'rgba(5, 53, 89, 0.05)',
+  },
+  tabIcon: {
+    marginRight: 8,
   },
   tabText: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#777',
     fontWeight: '500',
   },
   activeTabText: {
-    color: '#09355c',
+    color: '#053559',
     fontWeight: 'bold',
   },
   activeIndicator: {
@@ -296,82 +564,143 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: '#09355c',
+    backgroundColor: '#053559',
   },
   timeFilterContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingVertical: 10,
-    backgroundColor: '#f9f9f9',
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   timeFilterTab: {
-    marginHorizontal: 10,
-    paddingVertical: 8,
+    marginHorizontal: 6,
+    paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 6,
-    backgroundColor: '#e0e0e0',
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
   },
   activeTimeFilterTab: {
-    backgroundColor: '#09355c',
+    backgroundColor: '#053559',
   },
   timeFilterText: {
+    fontSize: 12,
     color: '#444',
     fontWeight: '500',
   },
   activeTimeFilterText: {
     color: '#fff',
   },
-  labelText: {
-    fontWeight: 'bold',
-    color: '#09355c',
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   categoryContainer: {
     marginBottom: 20,
   },
   categoryTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#09355c',
-    marginBottom: 10,
+    color: '#333',
+  },
+  entriesCount: {
+    fontSize: 14,
+    color: '#777',
+    fontWeight: '500',
   },
   entryCard: {
-    backgroundColor: '#ffffff',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
+    backgroundColor: '#fff',
+    marginBottom: 12,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    position: 'relative',
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  entryText: {
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    backgroundColor: '#f8f8f8',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eaeaea',
+  },
+  cardHeaderText: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  cardTitle: {
     fontSize: 16,
+    fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
-    paddingRight: 50,
   },
   entryDate: {
     fontSize: 12,
     color: '#777',
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
+    marginTop: 2,
+  },
+  activityIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#053559',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardContent: {
+    padding: 15,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 8,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 15,
+    marginBottom: 5,
+  },
+  statIcon: {
+    marginRight: 5,
+  },
+  statText: {
+    fontSize: 14,
+    color: '#444',
+  },
+  statValue: {
+    fontWeight: '600',
+    color: '#333',
+  },
+  notesContainer: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+  },
+  notesLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#053559',
+    marginBottom: 2,
+  },
+  notesText: {
+    fontSize: 14,
+    color: '#444',
   },
   deleteButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#ff3b30',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-  },
-  deleteButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   noActivitiesContainer: {
     alignItems: 'center',
@@ -380,9 +709,22 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   noActivitiesText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#777',
     textAlign: 'center',
+    marginTop: 15,
+    marginBottom: 20,
+  },
+  addActivityButton: {
+    backgroundColor: '#053559',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+  },
+  addActivityButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 

@@ -26,8 +26,40 @@ export default function DashboardScreen() {
   const [todayWorkout, setTodayWorkout] = useState(null);
   const [goals, setGoals] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
-  const [stepData, setStepData] = useState({ today: 0, goal: 10000 });
+  const [stepData, setStepData] = useState({ today: 0, goal: 0 });
   const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
+    const fetchStepGoal = () => {
+      const db = getDatabase();
+      const user = auth.currentUser;
+
+      if (user) {
+        const weeklyStepGoalRef = ref(
+          db,
+          `Users/${user.uid}/Goals/weeklySteps`
+        );
+
+        onValue(weeklyStepGoalRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const goalValue = Number(snapshot.val());
+            setStepData((prevState) => ({
+              ...prevState,
+              goal: goalValue,
+            }));
+          } else {
+            // If no goal is set in Firebase, use the default value of 10000
+            setStepData((prevState) => ({
+              ...prevState,
+              goal: 10000,
+            }));
+          }
+        });
+      }
+    };
+
+    fetchStepGoal();
+  }, []);
 
   useEffect(() => {
     // IMPORTANT: Hide the header to remove "Dashboard" text
@@ -170,6 +202,13 @@ export default function DashboardScreen() {
       icon: 'list',
       iconFamily: 'FontAwesome',
       navigateTo: 'MyActivity',
+      color: '#053559',
+    },
+    {
+      title: 'Meals',
+      icon: 'cutlery',
+      iconFamily: 'FontAwesome',
+      navigateTo: 'MealPreferences',
       color: '#053559',
     },
   ];
