@@ -4,3 +4,4 @@ export const calculateAge = (dobString) => {
     const ageDate = new Date(diff);
     return Math.abs(ageDate.getUTCFullYear() - 1970);
   };
+  

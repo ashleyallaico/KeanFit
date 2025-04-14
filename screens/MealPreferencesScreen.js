@@ -39,6 +39,7 @@ export default function MealPreferencesScreen() {
     };
     const [mealSuggestions, setMealSuggestions] = useState([]);
 
+    
 
     const [loading, setLoading] = useState(true);
     const navigation = useNavigation();

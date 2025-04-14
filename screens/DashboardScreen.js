@@ -24,6 +24,7 @@ export default function DashboardScreen() {
     { title: 'Meal Preferences', icon: 'spoon', navigateTo: 'MealPreferences' },
   ];
 
+  
   return (
     <View style={styles.container}>
       <FlatList

@@ -16,7 +16,6 @@ import MyStepsScreen from '../screens/MyStepsScreen';
 import UserStats from '../components/UserStats';
 import MealPreferencesScreen from '../screens/MealPreferencesScreen';
 
-
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {

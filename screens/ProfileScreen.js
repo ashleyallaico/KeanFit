@@ -12,7 +12,6 @@ import {
   Platform
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-// import { Platform } from 'react-native';
 import { fetchUserProfile } from '../services/userService';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';

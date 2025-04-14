@@ -11,3 +11,4 @@ export const calculateBMI = (heightInMeters, weightInPounds) => {
     return bmi.toFixed(1); 
   };
   
+  
