@@ -9,7 +9,9 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ScrollView,
-  Platform
+  Platform,
+  ImageBackground,
+  StatusBar,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 // import { Platform } from 'react-native';
@@ -36,8 +38,6 @@ export default function ProfileScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDob, setTempDob] = useState(null); // holds the unconfirmed date
 
-
-
   // Helper to convert meters to feet and inches
   const convertMetersToFeetInches = (meters) => {
     const totalFeet = meters * 3.28084;
@@ -49,6 +49,13 @@ export default function ProfileScreen() {
     }
     return { feet, inches };
   };
+
+  // Use this to determine which option is the header
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
 
   useEffect(() => {
     const unsubscribe = fetchUserProfile((profileData) => {
@@ -62,7 +69,9 @@ export default function ProfileScreen() {
           );
         }
         if (profileData.Height) {
-          const { feet, inches } = convertMetersToFeetInches(profileData.Height);
+          const { feet, inches } = convertMetersToFeetInches(
+            profileData.Height
+          );
           setHeightFeet(String(feet));
           setHeightInches(String(inches));
         }
@@ -76,14 +85,10 @@ export default function ProfileScreen() {
   }, []);
 
   const confirmLogout = () => {
-    Alert.alert(
-      "Confirm Logout",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", onPress: handleLogout }
-      ]
-    );
+    Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', onPress: handleLogout },
+    ]);
   };
 
   const handleLogout = async () => {
@@ -101,12 +106,21 @@ export default function ProfileScreen() {
   const updateProfileDetails = () => {
     // Validate inputs
     if (
-      !heightFeet || isNaN(heightFeet) || parseFloat(heightFeet) < 0 ||
-      !heightInches || isNaN(heightInches) || parseFloat(heightInches) < 0 ||
+      !heightFeet ||
+      isNaN(heightFeet) ||
+      parseFloat(heightFeet) < 0 ||
+      !heightInches ||
+      isNaN(heightInches) ||
+      parseFloat(heightInches) < 0 ||
       parseFloat(heightInches) >= 12 ||
-      !weight || isNaN(weight) || parseFloat(weight) <= 0
+      !weight ||
+      isNaN(weight) ||
+      parseFloat(weight) <= 0
     ) {
-      Alert.alert('Validation Error', 'Please enter valid height (feet and inches) and weight.');
+      Alert.alert(
+        'Validation Error',
+        'Please enter valid height (feet and inches) and weight.'
+      );
       return;
     }
 
@@ -131,10 +145,13 @@ export default function ProfileScreen() {
           Height: parseFloat(meters.toFixed(2)),
           Weight: parseFloat(weight),
           DOB: dob,
-          Gender: gender || null
+          Gender: gender || null,
         }));
-        Alert.alert('Update Successful', 'Your profile has been updated successfully.');
-        setShowUpdateFields(false)
+        Alert.alert(
+          'Update Successful',
+          'Your profile has been updated successfully.'
+        );
+        setShowUpdateFields(false);
       })
       .catch((error) => {
         Alert.alert('Update Failed', error.message);
@@ -185,54 +202,108 @@ export default function ProfileScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.profilePhotoContainer}>
-            <FontAwesome name="user-circle" size={80} color="#09355c" />
-          </View>
-          <View style={styles.content}>
-            <View style={styles.card}>
-              {profile ? (
-                <>
-                  <Text style={styles.contentText}>Name: {profile.Name}</Text>
-                  <Text style={styles.contentText}>Email: {profile.Email}</Text>
-                  <Text style={styles.contentText}>
-                    BMI: {calculateBMI(profile.Height, profile.Weight) ?? 'N/A'}
-                  </Text>
-                  <Text style={styles.contentText}>
-                    Height: {heightFeet} ft {heightInches} in
-                  </Text>
-                  <Text style={styles.contentText}>Weight: {profile.Weight} Pounds</Text>
-                  <Text style={styles.contentText}>
-                    Age: {dob ? calculateAge(dob) + ' years' : 'Not provided'}
-                  </Text>
-                  <Text style={styles.contentText}>
-                    Gender: {gender || 'Not provided'}
-                  </Text>
+    <View style={styles.container}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#053559"
+        translucent={true}
+      />
 
-                </>
+      {/* Hero Section with Background */}
+      <ImageBackground
+        source={require('../assets/KeanBG.png')}
+        style={styles.heroSection}
+        resizeMode="cover"
+      >
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerSubtitle}>
+            Manage your personal information
+          </Text>
+        </View>
+      </ImageBackground>
+
+      <View style={styles.mainContent}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+        >
+          <View style={styles.contentContainer}>
+            {/* Profile Card */}
+            <View style={styles.profileCard}>
+              <View style={styles.profilePhotoContainer}>
+                <FontAwesome name="user-circle" size={80} color="#fff" />
+              </View>
+              {profile ? (
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>{profile.Name}</Text>
+                  <Text style={styles.profileEmail}>{profile.Email}</Text>
+                </View>
               ) : (
-                <Text>Loading profile...</Text>
+                <Text style={styles.loadingText}>Loading profile...</Text>
               )}
             </View>
 
-            <View style={styles.section}>
-              {/* Toggle update section button */}
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => setShowUpdateFields(!showUpdateFields)}
-              >
-                <FontAwesome name="edit" size={20} color="#fff" />
-                <Text style={styles.buttonText}>
-                  {showUpdateFields ? "Hide Update Fields" : "Edit Profile Details"}
-                </Text>
-              </TouchableOpacity>
+            {/* Personal Info Card */}
+            <View style={styles.settingsCard}>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
+              {profile && (
+                <>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>BMI</Text>
+                    <Text style={styles.infoValue}>
+                      {calculateBMI(profile.Height, profile.Weight) ?? 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Height</Text>
+                    <Text style={styles.infoValue}>
+                      {heightFeet} ft {heightInches} in
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Weight</Text>
+                    <Text style={styles.infoValue}>
+                      {profile.Weight} Pounds
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Age</Text>
+                    <Text style={styles.infoValue}>
+                      {dob ? calculateAge(dob) + ' years' : 'Not provided'}
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Gender</Text>
+                    <Text style={styles.infoValue}>
+                      {gender || 'Not provided'}
+                    </Text>
+                  </View>
+                </>
+              )}
             </View>
 
+            {/* Edit Profile Button */}
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => {
+                setShowUpdateFields(!showUpdateFields);
+              }}
+            >
+              <FontAwesome name="edit" size={16} color="#fff" />
+              <Text style={styles.editButtonText}>
+                {showUpdateFields
+                  ? 'Hide Update Fields'
+                  : 'Edit Profile Details'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Update Section */}
             {showUpdateFields && (
               <View style={styles.updateSection}>
-                <Text style={styles.updateLabel}>Update Profile Details</Text>
+                <Text style={styles.sectionTitle}>Update Profile</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter height (feet)"
@@ -259,7 +330,9 @@ export default function ProfileScreen() {
                   onPress={() => setShowDatePicker(true)}
                 >
                   <Text style={{ color: dob ? '#000' : '#999' }}>
-                    {dob ? new Date(dob).toLocaleDateString() : 'Select your date of birth'}
+                    {dob
+                      ? new Date(dob).toLocaleDateString()
+                      : 'Select your date of birth'}
                   </Text>
                 </TouchableOpacity>
 
@@ -281,10 +354,12 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       style={[styles.button, { marginTop: 10 }]}
                       onPress={() => {
-                        const now = new Date();
                         const age = calculateAge(tempDob);
                         if (age < 13 || age > 120) {
-                          Alert.alert('Invalid DOB', 'Please enter a realistic birthdate (age must be 13+).');
+                          Alert.alert(
+                            'Invalid DOB',
+                            'Please enter a realistic birthdate (age must be 13+).'
+                          );
                         } else {
                           setDob(tempDob.toISOString());
                           setShowDatePicker(false);
@@ -297,12 +372,12 @@ export default function ProfileScreen() {
                 )}
 
                 <View style={styles.genderContainer}>
-                  <Text style={{ fontWeight: '600', marginBottom: 5 }}>Select Gender</Text>
+                  <Text style={styles.genderTitle}>Select Gender</Text>
                   <View style={styles.genderOptions}>
                     <TouchableOpacity
                       style={[
                         styles.genderButton,
-                        gender === 'Male' && styles.genderButtonSelected
+                        gender === 'Male' && styles.genderButtonSelected,
                       ]}
                       onPress={() => setGender('Male')}
                     >
@@ -311,7 +386,7 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       style={[
                         styles.genderButton,
-                        gender === 'Female' && styles.genderButtonSelected
+                        gender === 'Female' && styles.genderButtonSelected,
                       ]}
                       onPress={() => setGender('Female')}
                     >
@@ -319,88 +394,226 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.button} onPress={updateProfileDetails}>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={updateProfileDetails}
+                >
                   <FontAwesome name="save" size={20} color="#fff" />
                   <Text style={styles.buttonText}>Update Profile</Text>
                 </TouchableOpacity>
               </View>
             )}
 
-            <View style={styles.section}>
-              {/* Preference Section */}
+            {/* Account Actions Card */}
+            <View style={styles.settingsCard}>
+              <Text style={styles.sectionTitle}>Account Actions</Text>
               <TouchableOpacity
-                style={styles.button}
+                style={styles.menuItem}
                 onPress={() => navigation.navigate('UpdatePassword')}
               >
-                <FontAwesome name="lock" size={20} color="#fff" />
-                <Text style={styles.buttonText}>Update Password</Text>
+                <View style={styles.menuItemLeft}>
+                  <View
+                    style={[
+                      styles.menuIconContainer,
+                      { backgroundColor: '#4A90E2' },
+                    ]}
+                  >
+                    <FontAwesome name="lock" size={16} color="#fff" />
+                  </View>
+                  <Text style={styles.menuItemText}>Update Password</Text>
+                </View>
+                <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.button, styles.buttonDanger]}
+                style={styles.menuItem}
                 onPress={disableAccount}
               >
-                <FontAwesome name="user-times" size={20} color="#fff" />
-                <Text style={styles.buttonText}>Disable Account</Text>
+                <View style={styles.menuItemLeft}>
+                  <View
+                    style={[
+                      styles.menuIconContainer,
+                      { backgroundColor: '#E74C3C' },
+                    ]}
+                  >
+                    <FontAwesome name="user-times" size={16} color="#fff" />
+                  </View>
+                  <Text style={styles.menuItemText}>Disable Account</Text>
+                </View>
+                <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.button}
-                onPress={confirmLogout}
-              >
-                <FontAwesome name="sign-out" size={20} color="#fff" />
-                <Text style={styles.buttonText}>Logout</Text>
+              <TouchableOpacity style={styles.menuItem} onPress={confirmLogout}>
+                <View style={styles.menuItemLeft}>
+                  <View
+                    style={[
+                      styles.menuIconContainer,
+                      { backgroundColor: '#E74C3C' },
+                    ]}
+                  >
+                    <FontAwesome name="sign-out" size={16} color="#fff" />
+                  </View>
+                  <Text style={styles.menuItemText}>Logout</Text>
+                </View>
+                <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
               </TouchableOpacity>
             </View>
-
-
           </View>
         </ScrollView>
-        <NavBar />
       </View>
-    </TouchableWithoutFeedback>
+      <NavBar />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f7',
+  },
+  mainContent: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    flexGrow: 1,
+    paddingBottom: 100,
+  },
+  contentContainer: {
+    padding: 20,
+  },
+  heroSection: {
+    height: 200,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  headerContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 20,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#fff',
+    opacity: 0.9,
+  },
+  profileCard: {
+    backgroundColor: '#053559',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   profilePhotoContainer: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginBottom: 15,
   },
-  content: {
-    flex: 1,
+  profileInfo: {
+    alignItems: 'center',
   },
-  card: {
+  profileName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 5,
+  },
+  profileEmail: {
+    fontSize: 16,
+    color: '#fff',
+    opacity: 0.9,
+  },
+  settingsCard: {
     backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 15,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 8,
     elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#053559',
+    marginBottom: 15,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  infoLabel: {
+    fontSize: 16,
+    color: '#666',
+  },
+  infoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#053559',
+    borderRadius: 20,
+    padding: 15,
+    marginBottom: 20,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: '#333',
   },
   updateSection: {
     marginBottom: 20,
-    padding: 10,
-    backgroundColor: '#f7f7f7',
-    borderRadius: 10,
-  },
-  updateLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-    color: '#333',
   },
   input: {
     height: 40,
@@ -410,25 +623,14 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 8,
   },
-  contentText: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 10,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#09355c',
+    backgroundColor: '#053559',
     padding: 15,
     borderRadius: 10,
     marginVertical: 8,
-  },
-  buttonDanger: {
-    backgroundColor: '#dc3545',
   },
   buttonText: {
     color: '#fff',
@@ -454,11 +656,16 @@ const styles = StyleSheet.create({
   },
   genderButtonSelected: {
     backgroundColor: 'white',
-    borderColor: '#09355c',
+    borderColor: '#053559',
   },
   genderText: {
     color: '#000',
     fontWeight: '600',
   },
-  
+  genderTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#053559',
+    marginBottom: 15,
+  },
 });

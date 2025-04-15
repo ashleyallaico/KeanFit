@@ -24,6 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { auth } from '../services/firebaseConfig';
 import NavBar from '../components/NavBar';
+import { fetchUserProfile } from '../services/userService';
 
 const { width, height } = Dimensions.get('window');
 const cardWidth = width * 0.42;
@@ -41,7 +42,7 @@ export default function WorkoutsScreen() {
   const [userWorkouts, setUserWorkouts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredWorkouts, setFilteredWorkouts] = useState([]);
-  const [popularWorkouts, setPopularWorkouts] = useState([]);
+  const [recommendedWorkouts, setRecommendedWorkouts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const scrollY = new Animated.Value(0);
@@ -53,6 +54,7 @@ export default function WorkoutsScreen() {
     { name: 'Quick', active: false, icon: 'timer-sand' },
     { name: 'No Equip', active: false, icon: 'home' },
   ]);
+  const [preferences, setPreferences] = useState([]);
 
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 120],
@@ -134,17 +136,6 @@ export default function WorkoutsScreen() {
           setWorkoutSections(sections);
           setFilteredWorkouts(allWorkouts);
 
-          // Set some random workouts as popular but prioritize higher difficulty ones
-          const prioritized = [...allWorkouts].sort((a, b) => {
-            // Prioritize higher difficulty and shorter workouts for variety
-            return (
-              b.difficulty * 0.6 +
-              (45 - b.duration) * 0.4 -
-              (a.difficulty * 0.6 + (45 - a.duration) * 0.4)
-            );
-          });
-          setPopularWorkouts(prioritized.slice(0, 5));
-
           // Fetch user workouts
           fetchUserWorkouts();
           setIsLoading(false);
@@ -165,6 +156,56 @@ export default function WorkoutsScreen() {
       headerShown: false,
     });
   });
+
+  useEffect(() => {
+    const unsubscribe = fetchUserProfile((profileData) => {
+      console.log('User Profile:', profileData);
+      if (profileData && profileData.Preferences) {
+        console.log('User Preferences:', profileData.Preferences);
+        setPreferences(profileData.Preferences);
+      } else {
+        console.log('No preferences found in profile');
+        setPreferences([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (preferences.length === 0) {
+      console.log('No preferences found');
+      return;
+    }
+
+    const db = getDatabase();
+    let fetchedWorkouts = [];
+
+    const listeners = preferences.map((preference) => {
+      const preferenceRef = ref(db, `Workouts/${preference}`);
+      return onValue(preferenceRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const workoutsData = snapshot.val();
+          console.log(`Workouts for ${preference}:`, workoutsData);
+
+          const workoutsArray = Object.keys(workoutsData).map((key) => ({
+            id: key,
+            name: key,
+            ...workoutsData[key],
+          }));
+
+          fetchedWorkouts = [...fetchedWorkouts, ...workoutsArray];
+          console.log('Total recommended workouts:', fetchedWorkouts.length);
+          setRecommendedWorkouts([...fetchedWorkouts]);
+        } else {
+          console.log(`No workouts found for preference: ${preference}`);
+        }
+      });
+    });
+
+    return () => {
+      listeners.forEach((unsubscribe) => unsubscribe());
+    };
+  }, [preferences]);
 
   const fetchUserWorkouts = () => {
     const user = auth.currentUser;
@@ -305,13 +346,13 @@ export default function WorkoutsScreen() {
     });
     setFilteredWorkouts(updatedFilteredWorkouts);
 
-    const updatedPopularWorkouts = popularWorkouts.map((workout) => {
+    const updatedRecommendedWorkouts = recommendedWorkouts.map((workout) => {
       if (workout.id === workoutId) {
         return { ...workout, favorite: !workout.favorite };
       }
       return workout;
     });
-    setPopularWorkouts(updatedPopularWorkouts);
+    setRecommendedWorkouts(updatedRecommendedWorkouts);
   };
 
   // Get icon for category
@@ -730,45 +771,37 @@ export default function WorkoutsScreen() {
         </View>
       ) : (
         <Animated.ScrollView
-          style={styles.content}
-          showsVerticalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
-          )}
-          scrollEventThrottle={16}
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
         >
-          {/* Featured Workouts */}
+          {/* Recommended Workouts Section */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
                 <FontAwesome5
-                  name="star"
+                  name="lightbulb"
                   size={18}
                   color="#FF8C00"
                   style={styles.sectionIcon}
                 />
-                <Text style={styles.sectionTitle}>Featured Workouts</Text>
+                <Text style={styles.sectionTitle}>Recommended for You</Text>
               </View>
-              <TouchableOpacity>
-                <Text style={styles.seeAllText}>See All</Text>
-              </TouchableOpacity>
             </View>
 
-            {popularWorkouts.length > 0 ? (
+            {recommendedWorkouts.length > 0 ? (
               <FlatList
-                data={popularWorkouts}
+                data={recommendedWorkouts}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 renderItem={renderFeaturedWorkout}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.featuredContainer}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={styles.recommendedContainer}
+                style={styles.recommendedList}
               />
             ) : (
-              <View style={styles.noFeaturedContainer}>
-                <Text style={styles.noFeaturedText}>
-                  No featured workouts available
+              <View style={styles.noRecommendedContainer}>
+                <Text style={styles.noRecommendedText}>
+                  Select your preferences to see recommended workouts
                 </Text>
               </View>
             )}
@@ -931,18 +964,28 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   // Content section styles
-  content: {
+  scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    paddingTop: 5, // Small padding at the top of content
+  },
   sectionContainer: {
-    marginBottom: 25,
+    marginBottom: 20,
+    paddingHorizontal: 15,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
     marginBottom: 15,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionIcon: {
+    marginRight: 10,
   },
   sectionTitle: {
     fontSize: 20,
@@ -952,54 +995,6 @@ const styles = StyleSheet.create({
   workoutCount: {
     fontSize: 14,
     color: '#666',
-  },
-  featuredContainer: {
-    paddingLeft: 20,
-    paddingRight: 10,
-  },
-  featuredWorkoutCard: {
-    width: width - 80,
-    height: 200,
-    marginRight: 15,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  featuredWorkoutImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  featuredGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '50%',
-    justifyContent: 'flex-end',
-    padding: 15,
-  },
-  featuredWorkoutInfo: {
-    width: '100%',
-  },
-  featuredWorkoutTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  featuredWorkoutMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  featuredMetaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  featuredMetaText: {
-    fontSize: 14,
-    color: '#fff',
-    marginLeft: 6,
   },
   workoutGrid: {
     flexDirection: 'row',
@@ -1205,7 +1200,103 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  scrollViewContent: {
-    paddingTop: 5, // Small padding at the top of content
+  recommendedList: {
+    height: 220, // Fixed height for the list
+  },
+  recommendedContainer: {
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+  },
+  noRecommendedContainer: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
+    marginHorizontal: 10,
+  },
+  noRecommendedText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  featuredWorkoutCard: {
+    width: width * 0.7, // Slightly reduced width
+    height: 200,
+    marginRight: 15,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  featuredWorkoutImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  featuredGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '60%', // Increased gradient height
+    padding: 15,
+    justifyContent: 'flex-end',
+  },
+  featuredWorkoutBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  featuredWorkoutBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    marginLeft: 5,
+  },
+  featuredWorkoutInfo: {
+    marginTop: 10,
+  },
+  featuredWorkoutTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  featuredWorkoutMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap', // Allow meta items to wrap
+  },
+  featuredMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+    marginBottom: 5,
+  },
+  featuredMetaText: {
+    color: '#fff',
+    fontSize: 14,
+    marginLeft: 5,
+  },
+  favoriteButtonFeatured: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
