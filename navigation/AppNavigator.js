@@ -14,8 +14,7 @@ import WorkoutPreferences from '../screens/WorkoutPreferences';
 import StepTrackingScreen from '../screens/StepTrackingScreen';
 import MyStepsScreen from '../screens/MyStepsScreen';
 import UserStats from '../components/UserStats';
-import LogCaloriesScreen from '../screens/LogCalories';
-
+import MealPreferencesScreen from '../screens/MealPreferencesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -101,9 +100,9 @@ const AppNavigator = () => {
         options={{ title: 'My Activities', headerBackVisible: false  }}
       />
       <Stack.Screen
-        name="LogCalories"
-        component={LogCaloriesScreen}
-        options={{ title: 'Calories Log', headerBackVisible: false  }}
+        name="MealPreferences"
+        component={MealPreferencesScreen}
+        options={{ title: 'Meal Preferences', headerBackVisible: false  }}
       />
     </Stack.Navigator>
   );

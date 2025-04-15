@@ -21,9 +21,10 @@ export default function DashboardScreen() {
     { title: 'Fitness Goals', icon: 'trophy', navigateTo: 'MyGoalsScreen' },
     { title: "View Activities", icon: "user", navigateTo: "MyActivity" },
     { title: 'Step Tracking', icon: 'road', navigateTo: 'StepTracking' },
-    { title: 'Log Calories', icon: 'road', navigateTo: 'LogCalories' },
+    { title: 'Meal Preferences', icon: 'spoon', navigateTo: 'MealPreferences' },
   ];
 
+  
   return (
     <View style={styles.container}>
       <FlatList

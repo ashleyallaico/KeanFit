@@ -8,23 +8,34 @@ import {
   TextInput,
   Keyboard,
   TouchableWithoutFeedback,
-  ScrollView, 
+  ScrollView,
+  Platform
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { fetchUserProfile } from '../services/userService';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
 import { useNavigation } from '@react-navigation/native';
 import { getDatabase, ref, update, set } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
+import { calculateBMI } from '../utils/bmiCalculator';
+import { calculateAge } from '../utils/ageCalculator';
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState(null);
   const [heightFeet, setHeightFeet] = useState('');
   const [heightInches, setHeightInches] = useState('');
   const [weight, setWeight] = useState('');
+  const [dob, setDob] = useState('');
+  const [gender, setGender] = useState('');
   const [loading, setLoading] = useState(true);
   const [showUpdateFields, setShowUpdateFields] = useState(false);
   const navigation = useNavigation();
+  // const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDob, setTempDob] = useState(null); // holds the unconfirmed date
+
+
 
   // Helper to convert meters to feet and inches
   const convertMetersToFeetInches = (meters) => {
@@ -43,16 +54,24 @@ export default function ProfileScreen() {
       if (profileData) {
         setProfile(profileData);
         // Convert the stored height (meters) to feet and inches
+        if (!profileData.DOB || !profileData.Gender) {
+          Alert.alert(
+            'Complete Your Profile',
+            'Please update your date of birth and gender to personalize your experience.'
+          );
+        }
         if (profileData.Height) {
           const { feet, inches } = convertMetersToFeetInches(profileData.Height);
           setHeightFeet(String(feet));
           setHeightInches(String(inches));
         }
+        if (profileData.Gender) setGender(profileData.Gender);
+        if (profileData.DOB) setDob(profileData.DOB);
         setWeight(String(profileData.Weight ?? ''));
       }
       setLoading(false);
     });
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, []);
 
   const confirmLogout = () => {
@@ -101,6 +120,8 @@ export default function ProfileScreen() {
     update(profileRef, {
       Height: parseFloat(meters.toFixed(2)),
       Weight: parseFloat(weight),
+      DOB: dob,
+      Gender: gender || null,
     })
       .then(() => {
         // Update local profile state with new values
@@ -108,6 +129,8 @@ export default function ProfileScreen() {
           ...prevProfile,
           Height: parseFloat(meters.toFixed(2)),
           Weight: parseFloat(weight),
+          DOB: dob,
+          Gender: gender || null
         }));
         Alert.alert('Update Successful', 'Your profile has been updated successfully.');
         setShowUpdateFields(false)
@@ -174,9 +197,19 @@ export default function ProfileScreen() {
                   <Text style={styles.contentText}>Name: {profile.Name}</Text>
                   <Text style={styles.contentText}>Email: {profile.Email}</Text>
                   <Text style={styles.contentText}>
+                    BMI: {calculateBMI(profile.Height, profile.Weight) ?? 'N/A'}
+                  </Text>
+                  <Text style={styles.contentText}>
                     Height: {heightFeet} ft {heightInches} in
                   </Text>
                   <Text style={styles.contentText}>Weight: {profile.Weight} Pounds</Text>
+                  <Text style={styles.contentText}>
+                    Age: {dob ? calculateAge(dob) + ' years' : 'Not provided'}
+                  </Text>
+                  <Text style={styles.contentText}>
+                    Gender: {gender || 'Not provided'}
+                  </Text>
+
                 </>
               ) : (
                 <Text>Loading profile...</Text>
@@ -220,6 +253,71 @@ export default function ProfileScreen() {
                   onChangeText={setWeight}
                   keyboardType="numeric"
                 />
+                <TouchableOpacity
+                  style={styles.input}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={{ color: dob ? '#000' : '#999' }}>
+                    {dob ? new Date(dob).toLocaleDateString() : 'Select your date of birth'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <View>
+                    <DateTimePicker
+                      value={tempDob ? new Date(tempDob) : new Date(2000, 0, 1)}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      maximumDate={new Date()}
+                      onChange={(event, selectedDate) => {
+                        if (event.type === 'dismissed') {
+                          setShowDatePicker(false);
+                          return;
+                        }
+                        setTempDob(selectedDate);
+                      }}
+                    />
+                    <TouchableOpacity
+                      style={[styles.button, { marginTop: 10 }]}
+                      onPress={() => {
+                        const now = new Date();
+                        const age = calculateAge(tempDob);
+                        if (age < 13 || age > 120) {
+                          Alert.alert('Invalid DOB', 'Please enter a realistic birthdate (age must be 13+).');
+                        } else {
+                          setDob(tempDob.toISOString());
+                          setShowDatePicker(false);
+                        }
+                      }}
+                    >
+                      <Text style={styles.buttonText}>Save Date of Birth</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                <View style={styles.genderContainer}>
+                  <Text style={{ fontWeight: '600', marginBottom: 5 }}>Select Gender</Text>
+                  <View style={styles.genderOptions}>
+                    <TouchableOpacity
+                      style={[
+                        styles.genderButton,
+                        gender === 'Male' && styles.genderButtonSelected
+                      ]}
+                      onPress={() => setGender('Male')}
+                    >
+                      <Text style={styles.genderText}>Male</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.genderButton,
+                        gender === 'Female' && styles.genderButtonSelected
+                      ]}
+                      onPress={() => setGender('Female')}
+                    >
+                      <Text style={styles.genderText}>Female</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
                 <TouchableOpacity style={styles.button} onPress={updateProfileDetails}>
                   <FontAwesome name="save" size={20} color="#fff" />
                   <Text style={styles.buttonText}>Update Profile</Text>
@@ -337,4 +435,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
+  genderContainer: {
+    marginTop: 10,
+  },
+  genderOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 5,
+  },
+  genderButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#f5f5f5',
+  },
+  genderButtonSelected: {
+    backgroundColor: 'white',
+    borderColor: '#09355c',
+  },
+  genderText: {
+    color: '#000',
+    fontWeight: '600',
+  },
+  
 });
