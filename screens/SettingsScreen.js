@@ -18,7 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { getDatabase, ref, set } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
 import { fetchUserProfile } from '../services/userService';
-import { CATEGORIES } from '../constants/categories';
+import Constants from 'expo-constants';
 
 const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -97,7 +97,7 @@ const SettingsScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.contentContainer}>
-          {/*Profile Section*/}
+          {/* Profile Section */}
           <View style={styles.profileCard}>
             {profile ? (
               <>
@@ -119,7 +119,7 @@ const SettingsScreen = () => {
             )}
           </View>
 
-          {/*Account Section*/}
+          {/* Account Section */}
           <View style={styles.settingsCard}>
             <Text style={styles.sectionTitle}>Account Settings</Text>
             <TouchableOpacity
@@ -159,19 +159,16 @@ const SettingsScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/*General Section*/}
+          {/* General Settings */}
           <View style={styles.settingsCard}>
             <Text style={styles.sectionTitle}>General Settings</Text>
-            <SettingItem icon="bell" title="Notifications">
-              <Switch
-                trackColor={{ false: '#D1D1D6', true: '#053559' }}
-                thumbColor={notificationsEnabled ? '#fff' : '#fff'}
-                ios_backgroundColor="#D1D1D6"
-                onValueChange={handleNotificationsToggle}
-                value={notificationsEnabled}
-                style={styles.switch}
-              />
-            </SettingItem>
+            <TouchableOpacity
+              style={styles.buttonGeneral}
+              onPress={() => navigation.navigate('Reminders')}
+            >
+              <FontAwesome name="bell" size={20} color="#09355c" />
+              <Text style={styles.buttonGeneralText}>Notifications</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Sign Out Button */}
@@ -184,7 +181,9 @@ const SettingsScreen = () => {
           </TouchableOpacity>
 
           {/* Version info */}
-          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={styles.versionText}>
+            Version {Constants.expoConfig.version}
+          </Text>
 
           {/* Bottom padding for scroll */}
           <View style={styles.bottomPadding} />
@@ -346,6 +345,18 @@ const styles = StyleSheet.create({
   },
   switch: {
     transform: [{ scale: 0.8 }],
+  },
+  buttonGeneral: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  buttonGeneralText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 20,
   },
   signOutButton: {
     flexDirection: 'row',

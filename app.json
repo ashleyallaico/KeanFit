@@ -17,7 +17,8 @@
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.kean.keanfitt",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["fetch", "remote-notification"]  // Add this line
       }
     },
     "android": {

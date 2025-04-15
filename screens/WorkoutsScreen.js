@@ -227,21 +227,39 @@ export default function WorkoutsScreen() {
 
   // Image selection logic based on workout category and name
   const getWorkoutImage = (category, name) => {
-    // Placeholder logic to assign images
+    // Specific workout images
+    if (name.toLowerCase().includes('jump rope')) {
+      return require('../assets/jump rope.png');
+    }
+    if (name.toLowerCase().includes('walking')) {
+      return require('../assets/walking.png');
+    }
+    if (name.toLowerCase().includes('bench press')) {
+      return require('../assets/bench press.png');
+    }
+    if (name.toLowerCase().includes('squads')) {
+      return require('../assets/squats.png');
+    }
+
+    // Category-based images
     if (category === 'Cardio') {
-      if (name.toLowerCase().includes('run'))
+      if (name.toLowerCase().includes('run')) {
         return require('../assets/workout-cardio-running.png');
-      if (name.toLowerCase().includes('swim'))
+      }
+      if (name.toLowerCase().includes('swim')) {
         return require('../assets/workout-cardio-swimming.png');
+      }
       return require('../assets/workout-cardio-default.png');
     } else if (category === 'Strength Training' || category === 'Strength') {
-      if (name.toLowerCase().includes('chest'))
+      if (name.toLowerCase().includes('chest')) {
         return require('../assets/workout-strength-chest.png');
-      if (name.toLowerCase().includes('leg'))
+      }
+      if (name.toLowerCase().includes('leg')) {
         return require('../assets/workout-strength-legs.png');
+      }
       return require('../assets/workout-strength-default.png');
     } else if (category === 'Yoga') {
-      return require('../assets/workout-yoga-default.png');
+      return require('../assets/downward dog.png');
     } else {
       // Default image for any other category
       return require('../assets/workout-strength-default.png');
@@ -1049,6 +1067,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+    flexWrap: 'wrap',
   },
   categoryPill: {
     backgroundColor: 'rgba(9, 53, 92, 0.1)',
@@ -1056,6 +1075,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     marginRight: 8,
+    maxWidth: '60%',
   },
   categoryPillText: {
     fontSize: 12,
@@ -1065,6 +1085,7 @@ const styles = StyleSheet.create({
   minutesPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: 'auto',
   },
   minutesPillText: {
     fontSize: 12,
@@ -1227,8 +1248,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   featuredWorkoutCard: {
-    width: width * 0.7, // Slightly reduced width
-    height: 200,
+    width: width * 0.7,
+    height: 220, // Increased height
     marginRight: 15,
     borderRadius: 12,
     overflow: 'hidden',
@@ -1249,7 +1270,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '60%', // Increased gradient height
+    height: '70%', // Increased gradient height
     padding: 15,
     justifyContent: 'flex-end',
   },
@@ -1262,6 +1283,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignSelf: 'flex-start',
     marginBottom: 10,
+    marginTop: 10, // Added top margin
   },
   featuredWorkoutBadgeText: {
     color: '#fff',

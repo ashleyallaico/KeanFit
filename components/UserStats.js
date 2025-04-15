@@ -159,7 +159,7 @@ const UserStats = ({ navigation }) => {
       case 'Strength':
         return { name: 'dumbbell', type: 'FontAwesome5' };
       case 'Yoga':
-        return { name: 'spa', type: 'FontAwesome5' };
+        return { name: 'leaf', type: 'FontAwesome5' };
       default:
         return { name: 'calendar', type: 'FontAwesome' };
     }
@@ -170,7 +170,7 @@ const UserStats = ({ navigation }) => {
     const tabs = [
       { name: 'Cardio', icon: 'heartbeat' },
       { name: 'Strength Training', icon: 'dumbbell' },
-      { name: 'Yoga', icon: 'spa' },
+      { name: 'Yoga', icon: 'leaf' },
     ];
 
     return (

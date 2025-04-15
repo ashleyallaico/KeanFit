@@ -121,7 +121,7 @@ const MyWorkoutScreen = ({ navigation }) => {
         return <FontAwesome5 name="dumbbell" size={24} color="#fff" />;
       case 'yoga':
       case 'flexibility':
-        return <FontAwesome5 name="spa" size={22} color="#fff" />;
+        return <FontAwesome5 name="leaf" size={22} color="#fff" />;
       case 'hiit':
         return <FontAwesome5 name="bolt" size={24} color="#fff" />;
       default:
@@ -260,13 +260,15 @@ const MyWorkoutScreen = ({ navigation }) => {
           >
             <FontAwesome name="chevron-left" size={18} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.screenTitle}>My Workouts</Text>
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => navigation.navigate('Workouts')}
           >
             <FontAwesome name="plus" size={18} color="#fff" />
           </TouchableOpacity>
+        </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.screenTitle}>My Workouts</Text>
         </View>
       </ImageBackground>
 
@@ -354,54 +356,79 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   heroSection: {
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 20,
-    paddingBottom: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    marginBottom: 15,
+    height: 200,
+    paddingTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
+    borderBottomLeftRadius: 35,
+    borderBottomRightRadius: 35,
+    marginBottom: 20,
     position: 'relative',
-    elevation: 8,
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
     zIndex: 10,
     overflow: 'hidden',
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 10,
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: Platform.OS === 'ios' ? 25 : 20,
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
+    left: 0,
+    right: 0,
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
+  titleContainer: {
+    position: 'absolute',
+    bottom: 35,
+    left: 0,
+    right: 0,
     alignItems: 'center',
   },
   screenTitle: {
-    fontSize: 22,
+    fontSize: Platform.OS === 'ios' ? 26 : 24,
     fontWeight: 'bold',
     color: '#fff',
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 4,
+    letterSpacing: 0.5,
+    paddingTop: 20,
   },
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  backButton: {
+    width: Platform.OS === 'ios' ? 42 : 38,
+    height: Platform.OS === 'ios' ? 42 : 38,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  addButton: {
+    width: Platform.OS === 'ios' ? 42 : 38,
+    height: Platform.OS === 'ios' ? 42 : 38,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   scrollContainer: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: Platform.OS === 'ios' ? 25 : 20,
     paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 80,
   },
   loadingContainer: {
     flex: 1,
@@ -499,11 +526,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
     flexWrap: 'wrap',
-  },
-  workoutDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
   },
   detailIcon: {
     marginRight: 8,

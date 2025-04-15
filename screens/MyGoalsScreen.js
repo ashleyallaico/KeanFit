@@ -13,6 +13,8 @@ import {
   ImageBackground,
   SafeAreaView,
   Dimensions,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -67,6 +69,27 @@ const parseActivityDate = (dateValue) => {
     return new Date(dateValue);
   }
   return new Date();
+};
+
+const getStatusStyle = (status) => {
+  switch (status) {
+    case 'Complete':
+      return {
+        backgroundColor: '#4CAF50',
+      };
+    case 'Due Today':
+      return {
+        backgroundColor: '#FF9800',
+      };
+    case 'Past Due':
+      return {
+        backgroundColor: '#F44336',
+      };
+    default:
+      return {
+        backgroundColor: '#ffc107',
+      };
+  }
 };
 
 const MyGoalsScreen = () => {
@@ -582,27 +605,75 @@ const MyGoalsScreen = () => {
     };
   };
 
+  const renderGoalCard = (goal) => (
+    <View style={styles.goalCard}>
+      <View style={styles.goalHeader}>
+        <View style={styles.goalTitleContainer}>
+          <Text style={styles.goalTitle} numberOfLines={2}>
+            {goal.subCategory || goal.category}
+          </Text>
+          <Text style={styles.goalCategory}>{goal.category}</Text>
+        </View>
+        <View style={styles.goalStatusContainer}>
+          <View style={[styles.statusBadge, getStatusStyle(goal.status)]}>
+            <Text style={styles.statusText}>{goal.status}</Text>
+          </View>
+        </View>
+      </View>
+      <View style={styles.goalProgress}>
+        <View style={styles.progressBar}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${(goal.current / goal.target) * 100}%` },
+            ]}
+          />
+        </View>
+        <Text style={styles.progressText}>
+          {goal.current} / {goal.target}
+        </Text>
+      </View>
+      <View style={styles.goalFooter}>
+        <Text style={styles.deadlineText}>
+          Due:{' '}
+          {goal.deadline ? goal.deadline.toLocaleDateString() : 'No deadline'}
+        </Text>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleEditPress(goal)}
+          >
+            <FontAwesome5 name="edit" size={16} color="#053559" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleDeleteGoal(goal.id)}
+          >
+            <FontAwesome5 name="trash" size={16} color="#E74C3C" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
         {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <ImageBackground
-            source={require('../assets/KeanBG.png')}
-            style={styles.heroImage}
-            resizeMode="cover"
-          >
-            <LinearGradient
-              colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
-              style={styles.heroGradient}
-            >
+        <ImageBackground
+          source={require('../assets/KeanBG.png')}
+          style={styles.heroSection}
+          resizeMode="cover"
+        >
+          <View style={styles.heroContent}>
+            <View style={styles.heroTextContainer}>
               <Text style={styles.heroTitle}>My Goals</Text>
               <Text style={styles.heroSubtitle}>
-                Track your fitness progress
+                Track your fitness journey
               </Text>
-            </LinearGradient>
-          </ImageBackground>
-        </View>
+            </View>
+          </View>
+        </ImageBackground>
 
         {/* Create Goal Button */}
         <TouchableOpacity
@@ -790,93 +861,61 @@ const MyGoalsScreen = () => {
                   return (
                     <View key={goal.id} style={styles.goalCard}>
                       <View style={styles.goalHeader}>
-                        <Text style={styles.goalTitle}>
-                          {goal.subCategory || goal.category}
-                        </Text>
+                        <View style={styles.goalTitleContainer}>
+                          <Text style={styles.goalTitle} numberOfLines={2}>
+                            {goal.subCategory || goal.category}
+                          </Text>
+                          <Text style={styles.goalCategory}>
+                            {goal.category}
+                          </Text>
+                        </View>
                         <View style={styles.goalStatusContainer}>
                           <View
-                            style={[
-                              styles.statusIndicator,
-                              {
-                                backgroundColor:
-                                  status === 'Complete'
-                                    ? '#4CAF50'
-                                    : status === 'Past Due'
-                                    ? '#dc3545'
-                                    : '#ffc107',
-                              },
-                            ]}
-                          />
-                          <Text
-                            style={[
-                              styles.statusText,
-                              status === 'Complete' && styles.statusComplete,
-                              status === 'Due Today' && styles.statusDueToday,
-                              status === 'Past Due' && styles.statusPastDue,
-                            ]}
+                            style={[styles.statusBadge, getStatusStyle(status)]}
                           >
-                            {status}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <Text style={styles.deadlineText}>
-                        Due: {formattedDeadline}
-                      </Text>
-
-                      {!goal.completed && (
-                        <View style={styles.progressContainer}>
-                          <Text style={styles.progressText}>
-                            {goal.category === 'Cardio' && goal.cardioSteps
-                              ? `Steps: ${progress} / ${target}`
-                              : goal.category === 'Cardio' &&
-                                goal.cardioDuration
-                              ? `Duration: ${progress.toFixed(
-                                  1
-                                )} / ${target} minutes`
-                              : goal.category === 'Strength'
-                              ? `Sessions: ${progress} / ${target}`
-                              : `Duration: ${progress.toFixed(
-                                  1
-                                )} / ${target} minutes`}
-                          </Text>
-                          <View style={styles.progressBar}>
-                            <View
-                              style={[
-                                styles.progressFill,
-                                { width: `${percentage}%` },
-                              ]}
-                            />
+                            <Text style={styles.statusText}>{status}</Text>
                           </View>
                         </View>
-                      )}
-
-                      <View style={styles.actionButtons}>
-                        {!goal.completed && (
+                      </View>
+                      <View style={styles.goalProgress}>
+                        <View style={styles.progressBar}>
+                          <View
+                            style={[
+                              styles.progressFill,
+                              { width: `${percentage}%` },
+                            ]}
+                          />
+                        </View>
+                        <Text style={styles.progressText}>
+                          {progress} / {target}
+                        </Text>
+                      </View>
+                      <View style={styles.goalFooter}>
+                        <Text style={styles.deadlineText}>
+                          Due: {formattedDeadline}
+                        </Text>
+                        <View style={styles.actionButtons}>
                           <TouchableOpacity
-                            style={styles.completeButton}
-                            onPress={() => handleCompleteGoal(goal)}
+                            style={styles.actionButton}
+                            onPress={() => handleEditPress(goal)}
                           >
-                            <FontAwesome5 name="check" size={14} color="#fff" />
-                            <Text style={styles.completeButtonText}>
-                              Mark Complete
-                            </Text>
+                            <FontAwesome5
+                              name="edit"
+                              size={16}
+                              color="#053559"
+                            />
                           </TouchableOpacity>
-                        )}
-                        <TouchableOpacity
-                          style={styles.editButton}
-                          onPress={() => handleEditPress(goal)}
-                        >
-                          <FontAwesome5 name="edit" size={14} color="#fff" />
-                          <Text style={styles.editButtonText}>Edit</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.deleteButton}
-                          onPress={() => handleDeleteGoal(goal.id)}
-                        >
-                          <FontAwesome5 name="trash" size={14} color="#fff" />
-                          <Text style={styles.deleteButtonText}>Delete</Text>
-                        </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => handleDeleteGoal(goal.id)}
+                          >
+                            <FontAwesome5
+                              name="trash"
+                              size={16}
+                              color="#E74C3C"
+                            />
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     </View>
                   );
@@ -991,7 +1030,6 @@ const MyGoalsScreen = () => {
                     onChangeText={setEditYogaDuration}
                     keyboardType="numeric"
                     returnKeyType="done"
-                    blurOnSubmit={true}
                   />
                 )}
               </View>
@@ -1055,58 +1093,71 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f9f9f9',
-    paddingBottom: 60, // Add padding to prevent content from being hidden
   },
   scrollContainer: {
     flex: 1,
-    paddingHorizontal: 15,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 80,
   },
   heroSection: {
-    height: 200,
+    height: Platform.OS === 'ios' ? 200 : 180,
     marginBottom: 20,
-  },
-  heroImage: {
-    width: '100%',
-    height: '100%',
-  },
-  heroGradient: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    overflow: 'hidden',
+  },
+  heroContent: {
+    flex: 1,
+    paddingHorizontal: 25,
+    paddingTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
+    justifyContent: 'center',
+  },
+  heroTextContainer: {
+    maxWidth: '60%',
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: Platform.OS === 'ios' ? 34 : 32,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   heroSubtitle: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 17 : 16,
     color: 'rgba(255,255,255,0.9)',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   createGoalButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#09355c',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
     borderRadius: 25,
     marginHorizontal: 20,
     marginTop: 20,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   createGoalButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 17 : 16,
     fontWeight: '600',
     marginLeft: 8,
   },
   goalsContainer: {
-    padding: 20,
+    padding: Platform.OS === 'ios' ? 25 : 20,
   },
   categorySection: {
-    marginBottom: 25,
+    marginBottom: Platform.OS === 'ios' ? 30 : 25,
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -1115,115 +1166,235 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   categoryTitle: {
-    fontSize: 20,
+    fontSize: Platform.OS === 'ios' ? 22 : 20,
     fontWeight: 'bold',
     color: '#333',
   },
   goalCount: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'ios' ? 15 : 14,
     color: '#666',
   },
   goalCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
+    borderRadius: 15,
+    padding: Platform.OS === 'ios' ? 20 : 15,
     marginBottom: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 3,
     elevation: 3,
   },
   goalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  goalTitleContainer: {
+    flex: 1,
+    marginRight: 10,
   },
   goalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  goalStatusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'ios' ? 17 : 16,
     fontWeight: '600',
-    marginBottom: 8,
-  },
-  statusComplete: {
-    color: '#4CAF50',
-  },
-  statusDueToday: {
-    color: '#FF9800',
-  },
-  statusPastDue: {
-    color: '#F44336',
-  },
-  deadlineText: {
-    fontSize: 14,
-    color: '#666',
+    color: '#333',
     marginBottom: 4,
   },
-  progressContainer: {
-    marginBottom: 15,
+  goalCategory: {
+    fontSize: Platform.OS === 'ios' ? 15 : 14,
+    color: '#666',
+  },
+  goalStatusContainer: {
+    flexShrink: 0,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  statusText: {
+    fontSize: Platform.OS === 'ios' ? 13 : 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  goalProgress: {
+    marginBottom: 10,
+  },
+  progressBar: {
+    height: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+    marginVertical: 10,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#4caf50',
+    borderRadius: 5,
   },
   progressText: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 17 : 16,
     color: '#333',
+  },
+  goalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  deadlineText: {
+    fontSize: Platform.OS === 'ios' ? 15 : 14,
+    color: '#666',
+    marginBottom: 4,
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 10,
   },
-  completeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  actionButton: {
+    padding: 8,
     borderRadius: 20,
+    backgroundColor: '#f0f0f0',
   },
-  editButton: {
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    width: '80%',
+    maxHeight: '60%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  modalScrollView: {
+    maxHeight: 200,
+  },
+  modalItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalItemText: {
+    fontSize: 16,
+  },
+  modalCloseButton: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 20,
+  },
+  modalButton: {
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  cancelButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  saveButton: {
     backgroundColor: '#09355c',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
   },
-  deleteButton: {
+  saveButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#dc3545',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 25,
   },
-  deleteButtonText: {
+  saveButtonText: {
     color: '#fff',
-    fontSize: 14,
-    marginLeft: 4,
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 10,
   },
-  completeButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    marginLeft: 4,
+  dropdownContainer: {
+    position: 'relative',
+    marginBottom: 16,
   },
-  editButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    marginLeft: 4,
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+  },
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdownList: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  navBarContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   goalContainer: {
     backgroundColor: '#fff',
@@ -1322,198 +1493,42 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: 10,
-    justifyContent: 'space-around',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    backgroundColor: '#e5e5e5',
+    flex: 1,
+    padding: 12,
+    backgroundColor: '#fff',
   },
   activeTab: {
     backgroundColor: '#09355c',
   },
   tabText: {
-    color: '#09355c',
+    fontSize: 16,
     fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
   },
   activeTabText: {
     color: '#fff',
   },
   emptyState: {
-    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
-    padding: 40,
+    alignItems: 'center',
   },
   emptyStateText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginTop: 16,
+    marginBottom: 10,
   },
   emptyStateSubtext: {
     fontSize: 14,
     color: '#666',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    width: '80%',
-    maxHeight: '60%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  modalScrollView: {
-    maxHeight: 200,
-  },
-  modalItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalItemText: {
-    fontSize: 16,
-  },
-  modalCloseButton: {
-    marginTop: 15,
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  modalCloseButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
-    marginVertical: 10,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#4caf50',
-    borderRadius: 5,
-  },
-  targetInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 12,
-    backgroundColor: '#fff',
-  },
-  navBarContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-    marginTop: 20,
-  },
-  modalButton: {
-    borderRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  cancelButton: {
-    backgroundColor: '#f0f0f0',
-  },
-  cancelButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-  },
-  cancelButtonText: {
-    color: '#333',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
-  saveButton: {
-    backgroundColor: '#09355c',
-  },
-  saveButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
-  dropdownContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  dropdownButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  dropdownButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  dropdownList: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    zIndex: 1000,
-  },
-  dropdownItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  dropdownItemText: {
-    fontSize: 16,
-    color: '#333',
   },
 });
 

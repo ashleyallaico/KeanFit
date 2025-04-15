@@ -479,7 +479,7 @@ export default function DashboardScreen() {
                           color="#053559"
                         />
                       ) : (
-                        <FontAwesome name="spa" size={22} color="#053559" />
+                        <FontAwesome name="leaf" size={22} color="#053559" />
                       )}
                     </View>
                     <View style={styles.goalContent}>
