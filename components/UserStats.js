@@ -7,10 +7,11 @@ import {
   TouchableOpacity,
   Alert,
   StatusBar,
-  ImageBackground,
   Platform,
+  ImageBackground,
   ActivityIndicator,
 } from 'react-native';
+import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import {
   setupActivityListener,
   deleteActivity,
@@ -18,159 +19,19 @@ import {
 import NavBar from './NavBar';
 import convertTimestampToDateString from '../utils/formatHelpers';
 import { useNavigation } from '@react-navigation/native';
-import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
-const UserStats = () => {
+const UserStats = ({ navigation }) => {
   const [activities, setActivities] = useState({});
-  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('Cardio'); // Default active tab
   const [activeTimeFilter, setActiveTimeFilter] = useState('Last 7 Days'); // Default time filter
   const [isDeleting, setIsDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = setupActivityListener((activitiesData) => {
-      setActivities(activitiesData);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerShown: false,
-    });
+  const [stats, setStats] = useState({
+    totalWorkouts: 0,
+    totalDuration: 0,
+    totalSteps: 0,
+    avgWeight: 0,
   });
-
-  const handleTabPress = (tabName) => {
-    setActiveTab(tabName);
-    // Turn off delete mode when switching tabs
-    setIsDeleting(false);
-  };
-
-  // Category Tabs component with updated styling
-  const CategoryTabs = () => {
-    const tabs = ['Cardio', 'Strength Training', 'Yoga'];
-    return (
-      <View style={styles.tabContainer}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => handleTabPress(tab)}
-          >
-            <View style={styles.tabContent}>
-              {getTabIcon(tab)}
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab && styles.activeTabText,
-                ]}
-              >
-                {tab}
-              </Text>
-            </View>
-            {activeTab === tab && <View style={styles.activeIndicator} />}
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-
-  // Get appropriate icon for each tab
-  const getTabIcon = (tab) => {
-    switch (tab) {
-      case 'Cardio':
-        return (
-          <FontAwesome5
-            name="running"
-            size={18}
-            color={activeTab === tab ? '#09355c' : '#777'}
-            style={styles.tabIcon}
-          />
-        );
-      case 'Strength Training':
-        return (
-          <FontAwesome5
-            name="dumbbell"
-            size={18}
-            color={activeTab === tab ? '#09355c' : '#777'}
-            style={styles.tabIcon}
-          />
-        );
-      case 'Yoga':
-        return (
-          <FontAwesome5
-            name="spa"
-            size={18}
-            color={activeTab === tab ? '#09355c' : '#777'}
-            style={styles.tabIcon}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  // Time Filter Tabs component
-  const TimeFilterTabs = () => {
-    const filters = ['Last 7 Days', 'Last Month', 'Last Year'];
-    return (
-      <View style={styles.timeFilterContainer}>
-        {filters.map((filter) => (
-          <TouchableOpacity
-            key={filter}
-            style={[
-              styles.timeFilterTab,
-              activeTimeFilter === filter && styles.activeTimeFilterTab,
-            ]}
-            onPress={() => setActiveTimeFilter(filter)}
-          >
-            <Text
-              style={[
-                styles.timeFilterText,
-                activeTimeFilter === filter && styles.activeTimeFilterText,
-              ]}
-            >
-              {filter}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-
-  // Delete activity handler remains the same
-  const handleDeleteActivity = (category, activityId) => {
-    Alert.alert(
-      'Delete Activity',
-      'Are you sure you want to delete this activity? This cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          onPress: () => {
-            deleteActivity(category, activityId)
-              .then(() => {
-                Alert.alert('Success', 'Activity deleted successfully.');
-              })
-              .catch((error) => {
-                Alert.alert(
-                  'Error',
-                  'Failed to delete activity. Please try again.'
-                );
-                console.error('Delete error:', error);
-              });
-          },
-          style: 'destructive',
-        },
-      ]
-    );
-  };
 
   // Helper: Calculate the start date based on the active time filter
   const getFilterStartDate = () => {
@@ -185,6 +46,12 @@ const UserStats = () => {
     }
     return startDate;
   };
+  // Set header options to hide the header title
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
 
   // Filter activities by the selected time range
   const filterActivitiesByTime = (activitiesObj) => {
@@ -220,352 +87,421 @@ const UserStats = () => {
     return result;
   };
 
-  // Combine filters: apply the time filter first, then the category filter
-  const filteredActivitiesByTime = filterActivitiesByTime(activities);
-  const filteredActivities = filterActivitiesByTab(filteredActivitiesByTime);
+  const calculateStats = (filteredActivitiesData) => {
+    let totalWorkouts = 0;
+    let totalDuration = 0;
+    let totalSteps = 0;
+    let totalWeight = 0;
+    let weightCount = 0;
+
+    Object.entries(filteredActivitiesData).forEach(([category, entries]) => {
+      totalWorkouts += Object.keys(entries).length;
+
+      Object.values(entries).forEach((entry) => {
+        // Add duration from cardio activities
+        if (entry.cardioDuration) {
+          totalDuration += entry.cardioDuration;
+        }
+
+        // Add duration from yoga activities
+        if (entry.yogaDuration) {
+          totalDuration += entry.yogaDuration;
+        }
+
+        // Add steps from cardio activities
+        if (entry.steps) {
+          totalSteps += parseInt(entry.steps) || 0;
+        }
+
+        // Track weights for average calculation
+        if (entry.weight) {
+          totalWeight += parseFloat(entry.weight) || 0;
+          weightCount++;
+        }
+      });
+    });
+
+    setStats({
+      totalWorkouts,
+      totalDuration,
+      totalSteps,
+      avgWeight: weightCount > 0 ? (totalWeight / weightCount).toFixed(1) : 0,
+    });
+  };
+
+  useEffect(() => {
+    const unsubscribe = setupActivityListener((data) => {
+      console.log('Received activities data:', data); // Debug log
+      setActivities(data);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Calculate filtered activities and update stats
+  useEffect(() => {
+    const filteredByTime = filterActivitiesByTime(activities);
+    const filteredByTab = filterActivitiesByTab(filteredByTime);
+    calculateStats(filteredByTab);
+  }, [activities, activeTab, activeTimeFilter]);
+
+  const handleTabPress = (tabName) => {
+    setActiveTab(tabName);
+    // Turn off delete mode when switching tabs
+    setIsDeleting(false);
+  };
+
+  // Get icon for workout category
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'Cardio':
+        return { name: 'heartbeat', type: 'FontAwesome' };
+      case 'Strength':
+        return { name: 'dumbbell', type: 'FontAwesome5' };
+      case 'Yoga':
+        return { name: 'spa', type: 'FontAwesome5' };
+      default:
+        return { name: 'calendar', type: 'FontAwesome' };
+    }
+  };
+
+  // Category Tabs component
+  const CategoryTabs = () => {
+    const tabs = [
+      { name: 'Cardio', icon: 'heartbeat' },
+      { name: 'Strength Training', icon: 'dumbbell' },
+      { name: 'Yoga', icon: 'spa' },
+    ];
+
+    return (
+      <View style={styles.tabContainer}>
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab.name}
+            style={[styles.tab, activeTab === tab.name && styles.activeTab]}
+            onPress={() => handleTabPress(tab.name)}
+          >
+            <FontAwesome5
+              name={tab.icon}
+              size={18}
+              color={activeTab === tab.name ? '#053559' : '#777'}
+              style={styles.tabIcon}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab.name && styles.activeTabText,
+              ]}
+            >
+              {tab.name}
+            </Text>
+            {activeTab === tab.name && <View style={styles.activeIndicator} />}
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  // Time Filter Tabs component
+  const TimeFilterTabs = () => {
+    const filters = ['Last 7 Days', 'Last Month', 'Last Year'];
+    return (
+      <View style={styles.timeFilterContainer}>
+        {filters.map((filter) => (
+          <TouchableOpacity
+            key={filter}
+            style={[
+              styles.timeFilterTab,
+              activeTimeFilter === filter && styles.activeTimeFilterTab,
+            ]}
+            onPress={() => setActiveTimeFilter(filter)}
+          >
+            <Text
+              style={[
+                styles.timeFilterText,
+                activeTimeFilter === filter && styles.activeTimeFilterText,
+              ]}
+            >
+              {filter}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  // Delete activity handler
+  const handleDeleteActivity = (category, activityId) => {
+    Alert.alert(
+      'Delete Activity',
+      'Are you sure you want to delete this activity? This cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: () => {
+            deleteActivity(category, activityId)
+              .then(() => {
+                Alert.alert('Success', 'Activity deleted successfully.');
+              })
+              .catch((error) => {
+                Alert.alert(
+                  'Error',
+                  'Failed to delete activity. Please try again.'
+                );
+                console.error('Delete error:', error);
+              });
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
 
   // Toggle delete mode
   const toggleDeleteMode = () => {
     setIsDeleting(!isDeleting);
   };
 
-  // Get color based on category
-  const getCategoryColor = (category) => {
-    if (!category) return '#09355c';
+  // Summary Stats component
+  const SummaryStats = () => {
+    return (
+      <View style={styles.summaryContainer}>
+        <Text style={styles.summaryTitle}>Summary</Text>
+        <View style={styles.statsGrid}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>{stats.totalWorkouts}</Text>
+            <Text style={styles.statLabel}>Workouts</Text>
+          </View>
 
-    switch (category) {
-      case 'Cardio':
-        return '#FF6B6B';
-      case 'Strength':
-        return '#4D96FF';
-      case 'Yoga':
-        return '#6BCB77';
-      default:
-        return '#09355c';
-    }
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>
+              {Math.floor(stats.totalDuration / 60)}
+            </Text>
+            <Text style={styles.statLabel}>Total Minutes</Text>
+          </View>
+
+          {activeTab === 'Cardio' && (
+            <View style={styles.statBox}>
+              <Text style={styles.statNumber}>{stats.totalSteps}</Text>
+              <Text style={styles.statLabel}>Total Steps</Text>
+            </View>
+          )}
+
+          {activeTab === 'Strength Training' && (
+            <View style={styles.statBox}>
+              <Text style={styles.statNumber}>{stats.avgWeight}</Text>
+              <Text style={styles.statLabel}>Avg Weight (lbs)</Text>
+            </View>
+          )}
+
+          {activeTab === 'Yoga' && (
+            <View style={styles.statBox}>
+              <Text style={styles.statNumber}>
+                {(
+                  stats.totalDuration /
+                  (stats.totalWorkouts || 1) /
+                  60
+                ).toFixed(1)}
+              </Text>
+              <Text style={styles.statLabel}>Avg Session (min)</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
   };
 
-  // Get icon based on sub-category
-  const getSubCategoryIcon = (category, subCategory) => {
-    if (category === 'Cardio') {
-      switch (subCategory?.toLowerCase()) {
-        case 'running':
-          return <FontAwesome5 name="running" size={16} color="#FF6B6B" />;
-        case 'cycling':
-          return <FontAwesome5 name="biking" size={16} color="#FF6B6B" />;
-        case 'swimming':
-          return <FontAwesome5 name="swimmer" size={16} color="#FF6B6B" />;
-        default:
-          return <FontAwesome5 name="heartbeat" size={16} color="#FF6B6B" />;
-      }
-    } else if (category === 'Strength') {
-      switch (subCategory?.toLowerCase()) {
-        case 'arms':
-          return <FontAwesome5 name="hand-rock" size={16} color="#4D96FF" />;
-        case 'legs':
-          return <FontAwesome5 name="shoe-prints" size={16} color="#4D96FF" />;
-        case 'chest':
-          return <FontAwesome5 name="user" size={16} color="#4D96FF" />;
-        case 'back':
-          return <FontAwesome5 name="user" size={16} color="#4D96FF" />;
-        default:
-          return <FontAwesome5 name="dumbbell" size={16} color="#4D96FF" />;
-      }
-    } else if (category === 'Yoga') {
-      return <FontAwesome5 name="spa" size={16} color="#6BCB77" />;
-    }
-    return <FontAwesome5 name="dot-circle" size={16} color="#09355c" />;
-  };
-
-  // Activity card component with updated styling
+  // Activity card component
   const ActivityCard = ({
     category,
     entryId,
     entryDetails,
     showDeleteButton,
-  }) => (
-    <View key={entryId} style={styles.entryCard}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.9)', 'rgba(249,249,249,0.9)']}
-        style={styles.cardGradient}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.subCategoryContainer}>
-            {getSubCategoryIcon(category, entryDetails.subCategory)}
-            {entryDetails.subCategory && (
-              <Text style={styles.subCategoryText}>
-                {entryDetails.subCategory}
-              </Text>
+  }) => {
+    const icon = getCategoryIcon(category);
+    const dateString = convertTimestampToDateString(entryDetails.date);
+
+    return (
+      <View key={entryId} style={styles.entryCard}>
+        <View style={styles.entryHeader}>
+          <View style={styles.entryIconContainer}>
+            {icon.type === 'FontAwesome5' ? (
+              <FontAwesome5 name={icon.name} size={16} color="#fff" />
+            ) : (
+              <FontAwesome name={icon.name} size={16} color="#fff" />
             )}
           </View>
-
-          <View
-            style={[
-              styles.categoryBadge,
-              { backgroundColor: getCategoryColor(category) },
-            ]}
-          >
-            <Text style={styles.categoryBadgeText}>{category}</Text>
-          </View>
-        </View>
-
-        <View style={styles.entryDetailsContainer}>
-          {entryDetails.steps && (
-            <View style={styles.detailRow}>
-              <FontAwesome5
-                name="shoe-prints"
-                size={14}
-                color="#09355c"
-                style={styles.detailIcon}
-              />
-              <Text style={styles.detailLabel}>Steps:</Text>
-              <Text style={styles.detailValue}>{entryDetails.steps}</Text>
-            </View>
-          )}
-
-          {entryDetails.weight && (
-            <View style={styles.detailRow}>
-              <FontAwesome5
-                name="weight"
-                size={14}
-                color="#09355c"
-                style={styles.detailIcon}
-              />
-              <Text style={styles.detailLabel}>Weight:</Text>
-              <Text style={styles.detailValue}>{entryDetails.weight} lbs</Text>
-            </View>
-          )}
-
-          {entryDetails.reps && (
-            <View style={styles.detailRow}>
-              <FontAwesome5
-                name="redo"
-                size={14}
-                color="#09355c"
-                style={styles.detailIcon}
-              />
-              <Text style={styles.detailLabel}>Repetitions:</Text>
-              <Text style={styles.detailValue}>{entryDetails.reps}</Text>
-            </View>
-          )}
-
-          {entryDetails.sets && (
-            <View style={styles.detailRow}>
-              <FontAwesome5
-                name="layer-group"
-                size={14}
-                color="#09355c"
-                style={styles.detailIcon}
-              />
-              <Text style={styles.detailLabel}>Sets:</Text>
-              <Text style={styles.detailValue}>{entryDetails.sets}</Text>
-            </View>
-          )}
-
-          {entryDetails.cardioDuration && (
-            <View style={styles.detailRow}>
-              <FontAwesome5
-                name="clock"
-                size={14}
-                color="#09355c"
-                style={styles.detailIcon}
-              />
-              <Text style={styles.detailLabel}>Duration:</Text>
-              <Text style={styles.detailValue}>
-                {Math.floor(entryDetails.cardioDuration / 60)} min,{' '}
-                {Math.floor(entryDetails.cardioDuration % 60)} secs
-              </Text>
-            </View>
-          )}
-
-          {entryDetails.yogaDuration && (
-            <View style={styles.detailRow}>
-              <FontAwesome5
-                name="clock"
-                size={14}
-                color="#09355c"
-                style={styles.detailIcon}
-              />
-              <Text style={styles.detailLabel}>Duration:</Text>
-              <Text style={styles.detailValue}>
-                {Math.floor(entryDetails.yogaDuration / 60)} min,{' '}
-                {Math.floor(entryDetails.yogaDuration % 60)} secs
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.cardFooter}>
-          <View style={styles.dateContainer}>
-            <FontAwesome5
-              name="calendar-alt"
-              size={12}
-              color="#777"
-              style={styles.dateIcon}
-            />
-            <Text style={styles.entryDate}>
-              {convertTimestampToDateString(entryDetails.date)}
+          <View style={styles.entryTitleContainer}>
+            <Text style={styles.entryTitle}>
+              {entryDetails.subCategory || category}
             </Text>
+            <Text style={styles.entryDate}>{dateString}</Text>
           </View>
-
           {showDeleteButton && (
             <TouchableOpacity
               style={styles.deleteButton}
               onPress={() => handleDeleteActivity(category, entryId)}
             >
-              <FontAwesome name="trash" size={14} color="#fff" />
-              <Text style={styles.deleteButtonText}>Delete</Text>
+              <FontAwesome name="trash" size={16} color="#fff" />
             </TouchableOpacity>
           )}
         </View>
-      </LinearGradient>
-    </View>
-  );
+
+        <View style={styles.entryDetails}>
+          {/* Cardio specifics */}
+          {entryDetails.steps !== undefined && (
+            <View style={styles.detailRow}>
+              <FontAwesome5 name="shoe-prints" size={14} color="#053559" />
+              <Text style={styles.detailText}>
+                <Text style={styles.detailLabel}>Steps: </Text>
+                {entryDetails.steps}
+              </Text>
+            </View>
+          )}
+
+          {entryDetails.cardioDuration !== undefined && (
+            <View style={styles.detailRow}>
+              <FontAwesome5 name="clock" size={14} color="#053559" />
+              <Text style={styles.detailText}>
+                <Text style={styles.detailLabel}>Duration: </Text>
+                {Math.floor(entryDetails.cardioDuration / 60)} min,{' '}
+                {Math.floor(entryDetails.cardioDuration % 60)} sec
+              </Text>
+            </View>
+          )}
+
+          {/* Strength specifics */}
+          {entryDetails.weight !== undefined && (
+            <View style={styles.detailRow}>
+              <FontAwesome5 name="weight" size={14} color="#053559" />
+              <Text style={styles.detailText}>
+                <Text style={styles.detailLabel}>Weight: </Text>
+                {entryDetails.weight} lbs
+              </Text>
+            </View>
+          )}
+
+          {entryDetails.reps !== undefined && (
+            <View style={styles.detailRow}>
+              <FontAwesome5 name="redo" size={14} color="#053559" />
+              <Text style={styles.detailText}>
+                <Text style={styles.detailLabel}>Reps: </Text>
+                {entryDetails.reps}
+              </Text>
+            </View>
+          )}
+
+          {entryDetails.sets !== undefined && (
+            <View style={styles.detailRow}>
+              <FontAwesome5 name="layer-group" size={14} color="#053559" />
+              <Text style={styles.detailText}>
+                <Text style={styles.detailLabel}>Sets: </Text>
+                {entryDetails.sets}
+              </Text>
+            </View>
+          )}
+
+          {/* Yoga specifics */}
+          {entryDetails.yogaDuration !== undefined && (
+            <View style={styles.detailRow}>
+              <FontAwesome5 name="clock" size={14} color="#053559" />
+              <Text style={styles.detailText}>
+                <Text style={styles.detailLabel}>Duration: </Text>
+                {Math.floor(entryDetails.yogaDuration / 60)} min,{' '}
+                {Math.floor(entryDetails.yogaDuration % 60)} sec
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor="#09355c"
+        backgroundColor="#053559"
         translucent={true}
       />
 
-      {/* Header Section */}
+      {/* Hero Section with Background */}
       <ImageBackground
         source={require('../assets/KeanBG.png')}
         style={styles.heroSection}
         resizeMode="cover"
       >
         <View style={styles.headerContainer}>
-          <Text style={styles.screenTitle}>Activity Stats</Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <FontAwesome name="sliders" size={18} color="#fff" />
-          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Activity History</Text>
+          <Text style={styles.headerSubtitle}>Track your fitness progress</Text>
         </View>
       </ImageBackground>
 
       <CategoryTabs />
       <TimeFilterTabs />
 
-      <View style={styles.actionContainer}>
-        <TouchableOpacity
-          style={[styles.actionButton, isDeleting && styles.activeActionButton]}
-          onPress={toggleDeleteMode}
-        >
-          <FontAwesome
-            name={isDeleting ? 'check' : 'edit'}
-            size={16}
-            color={isDeleting ? '#fff' : '#444'}
-            style={styles.actionIcon}
-          />
-          <Text
-            style={[
-              styles.actionButtonText,
-              isDeleting && styles.activeActionButtonText,
-            ]}
-          >
-            {isDeleting ? 'Done' : 'Edit Activities'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#09355c" />
+          <ActivityIndicator size="large" color="#053559" />
           <Text style={styles.loadingText}>Loading your activities...</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {Object.keys(filteredActivities).length > 0 ? (
-            Object.entries(filteredActivities).map(([category, entries]) => (
-              <View key={category} style={styles.categoryContainer}>
-                <View style={styles.categoryHeader}>
-                  <View
-                    style={[
-                      styles.categoryDot,
-                      { backgroundColor: getCategoryColor(category) },
-                    ]}
-                  />
-                  <Text style={styles.categoryTitle}>{category}</Text>
-                  <Text style={styles.activityCount}>
-                    {Object.keys(entries).length}{' '}
-                    {Object.keys(entries).length === 1
-                      ? 'activity'
-                      : 'activities'}
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Summary Stats Section */}
+          <SummaryStats />
+
+          {(() => {
+            const filteredByTime = filterActivitiesByTime(activities);
+            const filteredByTab = filterActivitiesByTab(filteredByTime);
+
+            return Object.keys(filteredByTab).length > 0 ? (
+              Object.entries(filteredByTab).map(([category, entries]) => (
+                <View key={category} style={styles.categoryContainer}>
+                  <Text style={styles.categoryTitle}>
+                    {category === 'Strength' ? 'Strength Training' : category}
                   </Text>
+
+                  {Object.entries(entries).map(([entryId, entryDetails]) => (
+                    <ActivityCard
+                      key={entryId}
+                      category={category}
+                      entryId={entryId}
+                      entryDetails={entryDetails}
+                      showDeleteButton={isDeleting}
+                    />
+                  ))}
                 </View>
-                {Object.entries(entries).map(([entryId, entryDetails]) => (
-                  <ActivityCard
-                    key={entryId}
-                    category={category}
-                    entryId={entryId}
-                    entryDetails={entryDetails}
-                    showDeleteButton={isDeleting}
-                  />
-                ))}
-              </View>
-            ))
-          ) : (
-            <View style={styles.noActivitiesContainer}>
-              <FontAwesome5
-                name={
-                  activeTab === 'Cardio'
-                    ? 'running'
-                    : activeTab === 'Strength Training'
-                    ? 'dumbbell'
-                    : 'spa'
-                }
-                size={60}
-                color="#e0e0e0"
-              />
-              <Text style={styles.noActivitiesText}>
-                No {activeTab} activities recorded
-              </Text>
-              <Text style={styles.noActivitiesSubtext}>
-                in the selected time range.
-              </Text>
-              <TouchableOpacity style={styles.addActivityButton}>
-                <FontAwesome
-                  name="plus"
-                  size={16}
-                  color="#fff"
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.addActivityButtonText}>Add Activity</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Motivation Card */}
-          {Object.keys(filteredActivities).length > 0 && (
-            <LinearGradient
-              colors={['#09355c', '#09355c']}
-              style={styles.motivationCard}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <View style={styles.quoteContainer}>
-                <Text style={styles.quoteText}>
-                  "Track your progress, celebrate your victories, no matter how
-                  small."
+              ))
+            ) : (
+              <View style={styles.noActivitiesContainer}>
+                <FontAwesome5 name="clipboard-list" size={60} color="#aaa" />
+                <Text style={styles.noActivitiesText}>
+                  No {activeTab} activities recorded in the selected time range.
                 </Text>
-                <Text style={styles.quoteAuthor}>- KEANFIT</Text>
+                <TouchableOpacity
+                  style={styles.addWorkoutButton}
+                  onPress={() => navigation.navigate('Workouts')}
+                >
+                  <Text style={styles.addWorkoutButtonText}>
+                    Add New Workout
+                  </Text>
+                </TouchableOpacity>
               </View>
+            );
+          })()}
 
-              <View style={styles.logoWatermark}>
-                <FontAwesome
-                  name="paw"
-                  size={60}
-                  color="rgba(255,255,255,0.2)"
-                />
-              </View>
-            </LinearGradient>
-          )}
-
-          {/* Bottom Padding for NavBar */}
+          {/* Bottom Padding */}
           <View style={styles.bottomPadding} />
         </ScrollView>
       )}
+
       <NavBar />
     </View>
   );
@@ -578,69 +514,97 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 20,
-    paddingBottom: 20,
+    paddingBottom: 30,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    marginBottom: 15,
-    position: 'relative',
+    overflow: 'hidden',
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    zIndex: 10,
-    overflow: 'hidden',
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  screenTitle: {
-    fontSize: 22,
+  headerTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
+    marginBottom: 5,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
-  filterButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#fff',
+    opacity: 0.9,
+  },
+  scrollContainer: {
+    paddingHorizontal: 15,
+    paddingBottom: 80,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#777',
+  },
+  actionContainer: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    alignItems: 'flex-end',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 25,
+  },
+  actionIcon: {
+    marginRight: 8,
+  },
+  activeActionButton: {
+    backgroundColor: '#053559',
+  },
+  actionButtonText: {
+    color: '#053559',
+    fontWeight: '600',
+  },
+  activeActionButtonText: {
+    color: '#ffffff',
   },
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     backgroundColor: '#ffffff',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
   },
   tab: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 15,
     position: 'relative',
   },
-  tabContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   tabIcon: {
     marginRight: 8,
   },
   activeTab: {
-    borderBottomColor: '#09355c',
+    borderBottomColor: '#053559',
   },
   tabText: {
     fontSize: 14,
@@ -648,7 +612,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: '#09355c',
+    color: '#053559',
     fontWeight: 'bold',
   },
   activeIndicator: {
@@ -657,198 +621,151 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: '#09355c',
+    backgroundColor: '#053559',
   },
   timeFilterContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     paddingVertical: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#efefef',
+    borderBottomColor: '#e0e0e0',
   },
   timeFilterTab: {
-    marginHorizontal: 5,
-    paddingVertical: 6,
+    marginHorizontal: 8,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#f0f0f0',
   },
   activeTimeFilterTab: {
-    backgroundColor: '#09355c',
+    backgroundColor: '#053559',
   },
   timeFilterText: {
-    color: '#444',
+    color: '#777',
     fontWeight: '500',
-    fontSize: 12,
+    fontSize: 14,
   },
   activeTimeFilterText: {
     color: '#fff',
   },
-  actionContainer: {
+  summaryContainer: {
+    backgroundColor: '#fff',
     padding: 15,
-    backgroundColor: '#ffffff',
-    alignItems: 'flex-end',
-    borderBottomWidth: 1,
-    borderBottomColor: '#efefef',
-  },
-  actionButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionIcon: {
-    marginRight: 5,
-  },
-  activeActionButton: {
-    backgroundColor: '#09355c',
-  },
-  actionButtonText: {
-    color: '#444',
-    fontWeight: '500',
-    fontSize: 13,
-  },
-  activeActionButtonText: {
-    color: '#ffffff',
-  },
-  scrollContainer: {
-    paddingBottom: 80,
-    paddingHorizontal: 15,
-    paddingTop: 5,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
     marginTop: 15,
-    fontSize: 16,
-    color: '#09355c',
+    marginBottom: 20,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  statBox: {
+    flex: 1,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#053559',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 5,
   },
   categoryContainer: {
-    marginBottom: 20,
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 5,
-  },
-  categoryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 10,
+    marginTop: 15,
+    marginBottom: 10,
   },
   categoryTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    flex: 1,
-  },
-  activityCount: {
-    fontSize: 14,
-    color: '#666',
+    marginBottom: 10,
+    marginLeft: 5,
   },
   entryCard: {
-    marginBottom: 15,
-    borderRadius: 18,
-    overflow: 'hidden',
+    backgroundColor: '#ffffff',
+    borderRadius: 15,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    overflow: 'hidden',
   },
-  cardGradient: {
-    padding: 18,
-    borderRadius: 18,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  subCategoryContainer: {
+  entryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#f0f8ff',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  subCategoryText: {
+  entryIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#053559',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  entryTitleContainer: {
+    flex: 1,
+  },
+  entryTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginLeft: 8,
-  },
-  categoryBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  categoryBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  entryDetailsContainer: {
-    backgroundColor: 'rgba(249, 249, 249, 0.7)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    flexWrap: 'wrap',
-  },
-  detailIcon: {
-    marginRight: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#09355c',
-    marginRight: 5,
-  },
-  detailValue: {
-    fontSize: 14,
-    color: '#333',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateIcon: {
-    marginRight: 5,
+    color: '#053559',
   },
   entryDate: {
     fontSize: 12,
     color: '#777',
   },
-  deleteButton: {
-    backgroundColor: '#ff3b30',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 15,
+  entryDetails: {
+    padding: 15,
+  },
+  detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  deleteButtonText: {
-    color: '#ffffff',
+  detailText: {
+    fontSize: 15,
+    color: '#444',
+    marginLeft: 10,
+  },
+  detailLabel: {
     fontWeight: '600',
-    fontSize: 12,
-    marginLeft: 5,
+    color: '#333',
+  },
+  deleteButton: {
+    backgroundColor: '#ff3b30',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 6,
   },
   noActivitiesContainer: {
     alignItems: 'center',
@@ -857,65 +774,22 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   noActivitiesText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 20,
-    marginBottom: 5,
-  },
-  noActivitiesSubtext: {
     fontSize: 16,
     color: '#777',
-    marginBottom: 25,
+    textAlign: 'center',
+    marginTop: 15,
+    marginBottom: 20,
   },
-  addActivityButton: {
-    backgroundColor: '#09355c',
+  addWorkoutButton: {
+    backgroundColor: '#053559',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
-  addActivityButtonText: {
+  addWorkoutButtonText: {
     color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  motivationCard: {
-    borderRadius: 18,
-    padding: 25,
-    marginVertical: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  quoteContainer: {
-    zIndex: 2,
-  },
-  quoteText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 10,
-    fontStyle: 'italic',
-  },
-  quoteAuthor: {
-    fontSize: 14,
-    color: '#FFCB05',
-    textAlign: 'right',
     fontWeight: 'bold',
-  },
-  logoWatermark: {
-    position: 'absolute',
-    right: 20,
-    bottom: -15,
-    opacity: 0.7,
-    zIndex: 1,
+    fontSize: 16,
   },
   bottomPadding: {
     height: 100,

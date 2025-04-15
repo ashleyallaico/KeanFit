@@ -10,8 +10,8 @@ import {
   TouchableWithoutFeedback,
   ScrollView,
   Platform,
-  ImageBackground,
   StatusBar,
+  ImageBackground,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 // import { Platform } from 'react-native';
@@ -50,13 +50,6 @@ export default function ProfileScreen() {
     return { feet, inches };
   };
 
-  // Use this to determine which option is the header
-  useEffect(() => {
-    navigation.setOptions({
-      headerShown: false,
-    });
-  }, [navigation]);
-
   useEffect(() => {
     const unsubscribe = fetchUserProfile((profileData) => {
       if (profileData) {
@@ -84,23 +77,53 @@ export default function ProfileScreen() {
     return () => unsubscribe();
   }, []);
 
-  const confirmLogout = () => {
-    Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', onPress: handleLogout },
-    ]);
-  };
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  });
 
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
-    } catch (error) {
-      Alert.alert('Logout Failed', error.message);
-    }
+  const disableAccount = () => {
+    Alert.alert(
+      'Disable Account',
+      'Are you sure you want to disable your account?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Disable',
+          onPress: () => {
+            const userId = auth.currentUser.uid;
+            const db = getDatabase();
+            const accountStatusRef = ref(db, `AccountDissable/${userId}`);
+            set(accountStatusRef, true)
+              .then(() => {
+                auth
+                  .signOut()
+                  .then(() => {
+                    navigation.replace('Login');
+                    Alert.alert(
+                      'Account Disabled',
+                      'Your account has been disabled successfully.'
+                    );
+                  })
+                  .catch((error) => {
+                    Alert.alert('Logout Failed', error.message);
+                  });
+              })
+              .catch((error) => {
+                Alert.alert(
+                  'Error',
+                  'Failed to disable account: ' + error.message
+                );
+              });
+          },
+          style: 'destructive',
+        },
+      ]
+    );
   };
 
   const updateProfileDetails = () => {
@@ -158,49 +181,6 @@ export default function ProfileScreen() {
       });
   };
 
-  const disableAccount = () => {
-    Alert.alert(
-      'Disable Account',
-      'Are you sure you want to disable your account?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Disable',
-          onPress: () => {
-            const userId = auth.currentUser.uid;
-            const db = getDatabase();
-            const accountStatusRef = ref(db, `AccountDissable/${userId}`);
-            set(accountStatusRef, true)
-              .then(() => {
-                auth
-                  .signOut()
-                  .then(() => {
-                    navigation.replace('Login');
-                    Alert.alert(
-                      'Account Disabled',
-                      'Your account has been disabled successfully.'
-                    );
-                  })
-                  .catch((error) => {
-                    Alert.alert('Logout Failed', error.message);
-                  });
-              })
-              .catch((error) => {
-                Alert.alert(
-                  'Error',
-                  'Failed to disable account: ' + error.message
-                );
-              });
-          },
-          style: 'destructive',
-        },
-      ]
-    );
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar
@@ -223,76 +203,106 @@ export default function ProfileScreen() {
         </View>
       </ImageBackground>
 
-      <View style={styles.mainContent}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-        >
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.contentContainer}>
-            {/* Profile Card */}
+            {/* Profile Photo and Name */}
             <View style={styles.profileCard}>
               <View style={styles.profilePhotoContainer}>
-                <FontAwesome name="user-circle" size={80} color="#fff" />
+                <FontAwesome name="user-circle" size={100} color="#fff" />
               </View>
+              {profile && (
+                <Text style={styles.profileName}>{profile.Name}</Text>
+              )}
+            </View>
+
+            {/* Profile Information Card */}
+            <View style={styles.settingsCard}>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
               {profile ? (
-                <View style={styles.profileInfo}>
-                  <Text style={styles.profileName}>{profile.Name}</Text>
-                  <Text style={styles.profileEmail}>{profile.Email}</Text>
+                <View style={styles.infoContainer}>
+                  <View style={styles.infoRow}>
+                    <FontAwesome
+                      name="envelope"
+                      size={16}
+                      color="#053559"
+                      style={styles.infoIcon}
+                    />
+                    <Text style={styles.infoText}>Email: {profile.Email}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <FontAwesome
+                      name="calculator"
+                      size={16}
+                      color="#053559"
+                      style={styles.infoIcon}
+                    />
+                    <Text style={styles.infoText}>
+                      BMI:{' '}
+                      {calculateBMI(profile.Height, profile.Weight) ?? 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <FontAwesome
+                      name="arrows-v"
+                      size={16}
+                      color="#053559"
+                      style={styles.infoIcon}
+                    />
+                    <Text style={styles.infoText}>
+                      Height: {heightFeet} ft {heightInches} in
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <FontAwesome
+                      name="balance-scale"
+                      size={16}
+                      color="#053559"
+                      style={styles.infoIcon}
+                    />
+                    <Text style={styles.infoText}>
+                      Weight: {profile.Weight} Pounds
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <FontAwesome
+                      name="birthday-cake"
+                      size={16}
+                      color="#053559"
+                      style={styles.infoIcon}
+                    />
+                    <Text style={styles.infoText}>
+                      Age: {dob ? calculateAge(dob) + ' years' : 'Not provided'}
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <FontAwesome
+                      name="venus-mars"
+                      size={16}
+                      color="#053559"
+                      style={styles.infoIcon}
+                    />
+                    <Text style={styles.infoText}>
+                      Gender: {gender || 'Not provided'}
+                    </Text>
+                  </View>
                 </View>
               ) : (
                 <Text style={styles.loadingText}>Loading profile...</Text>
               )}
             </View>
 
-            {/* Personal Info Card */}
-            <View style={styles.settingsCard}>
-              <Text style={styles.sectionTitle}>Personal Information</Text>
-              {profile && (
-                <>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>BMI</Text>
-                    <Text style={styles.infoValue}>
-                      {calculateBMI(profile.Height, profile.Weight) ?? 'N/A'}
-                    </Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Height</Text>
-                    <Text style={styles.infoValue}>
-                      {heightFeet} ft {heightInches} in
-                    </Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Weight</Text>
-                    <Text style={styles.infoValue}>
-                      {profile.Weight} Pounds
-                    </Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Age</Text>
-                    <Text style={styles.infoValue}>
-                      {dob ? calculateAge(dob) + ' years' : 'Not provided'}
-                    </Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Gender</Text>
-                    <Text style={styles.infoValue}>
-                      {gender || 'Not provided'}
-                    </Text>
-                  </View>
-                </>
-              )}
-            </View>
-
             {/* Edit Profile Button */}
             <TouchableOpacity
               style={styles.editButton}
-              onPress={() => {
-                setShowUpdateFields(!showUpdateFields);
-              }}
+              onPress={() => setShowUpdateFields(!showUpdateFields)}
             >
-              <FontAwesome name="edit" size={16} color="#fff" />
+              <FontAwesome name="edit" size={20} color="#fff" />
               <Text style={styles.editButtonText}>
                 {showUpdateFields
                   ? 'Hide Update Fields'
@@ -300,44 +310,56 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Update Section */}
+            {/* Update Fields Section */}
             {showUpdateFields && (
-              <View style={styles.updateSection}>
-                <Text style={styles.sectionTitle}>Update Profile</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter height (feet)"
-                  value={heightFeet}
-                  onChangeText={setHeightFeet}
-                  keyboardType="numeric"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter height (inches)"
-                  value={heightInches}
-                  onChangeText={setHeightInches}
-                  keyboardType="numeric"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter new weight (pounds)"
-                  value={weight}
-                  onChangeText={setWeight}
-                  keyboardType="numeric"
-                />
-                <TouchableOpacity
-                  style={styles.input}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <Text style={{ color: dob ? '#000' : '#999' }}>
-                    {dob
-                      ? new Date(dob).toLocaleDateString()
-                      : 'Select your date of birth'}
-                  </Text>
-                </TouchableOpacity>
+              <View style={styles.settingsCard}>
+                <Text style={styles.sectionTitle}>Update Profile Details</Text>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Height (feet)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter height (feet)"
+                    value={heightFeet}
+                    onChangeText={setHeightFeet}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Height (inches)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter height (inches)"
+                    value={heightInches}
+                    onChangeText={setHeightInches}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Weight (pounds)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter new weight (pounds)"
+                    value={weight}
+                    onChangeText={setWeight}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Date of Birth</Text>
+                  <TouchableOpacity
+                    style={styles.dateInput}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Text style={{ color: dob ? '#000' : '#999' }}>
+                      {dob
+                        ? new Date(dob).toLocaleDateString()
+                        : 'Select your date of birth'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
                 {showDatePicker && (
-                  <View>
+                  <View style={styles.datePickerContainer}>
                     <DateTimePicker
                       value={tempDob ? new Date(tempDob) : new Date(2000, 0, 1)}
                       mode="date"
@@ -352,8 +374,9 @@ export default function ProfileScreen() {
                       }}
                     />
                     <TouchableOpacity
-                      style={[styles.button, { marginTop: 10 }]}
+                      style={styles.saveDateButton}
                       onPress={() => {
+                        const now = new Date();
                         const age = calculateAge(tempDob);
                         if (age < 13 || age > 120) {
                           Alert.alert(
@@ -366,13 +389,15 @@ export default function ProfileScreen() {
                         }
                       }}
                     >
-                      <Text style={styles.buttonText}>Save Date of Birth</Text>
+                      <Text style={styles.saveDateButtonText}>
+                        Save Date of Birth
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 )}
 
                 <View style={styles.genderContainer}>
-                  <Text style={styles.genderTitle}>Select Gender</Text>
+                  <Text style={styles.genderLabel}>Select Gender</Text>
                   <View style={styles.genderOptions}>
                     <TouchableOpacity
                       style={[
@@ -381,7 +406,14 @@ export default function ProfileScreen() {
                       ]}
                       onPress={() => setGender('Male')}
                     >
-                      <Text style={styles.genderText}>Male</Text>
+                      <Text
+                        style={[
+                          styles.genderText,
+                          gender === 'Male' && styles.genderTextSelected,
+                        ]}
+                      >
+                        Male
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[
@@ -390,77 +422,50 @@ export default function ProfileScreen() {
                       ]}
                       onPress={() => setGender('Female')}
                     >
-                      <Text style={styles.genderText}>Female</Text>
+                      <Text
+                        style={[
+                          styles.genderText,
+                          gender === 'Female' && styles.genderTextSelected,
+                        ]}
+                      >
+                        Female
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
+
                 <TouchableOpacity
-                  style={styles.button}
+                  style={styles.updateButton}
                   onPress={updateProfileDetails}
                 >
                   <FontAwesome name="save" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Update Profile</Text>
+                  <Text style={styles.updateButtonText}>Update Profile</Text>
                 </TouchableOpacity>
               </View>
             )}
 
-            {/* Account Actions Card */}
-            <View style={styles.settingsCard}>
-              <Text style={styles.sectionTitle}>Account Actions</Text>
+            {/* Account Actions */}
+            <View style={styles.actionsContainer}>
               <TouchableOpacity
-                style={styles.menuItem}
+                style={styles.actionButton}
                 onPress={() => navigation.navigate('UpdatePassword')}
               >
-                <View style={styles.menuItemLeft}>
-                  <View
-                    style={[
-                      styles.menuIconContainer,
-                      { backgroundColor: '#4A90E2' },
-                    ]}
-                  >
-                    <FontAwesome name="lock" size={16} color="#fff" />
-                  </View>
-                  <Text style={styles.menuItemText}>Update Password</Text>
-                </View>
-                <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
+                <FontAwesome name="lock" size={20} color="#fff" />
+                <Text style={styles.actionButtonText}>Update Password</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.menuItem}
+                style={[styles.actionButton, styles.disableButton]}
                 onPress={disableAccount}
               >
-                <View style={styles.menuItemLeft}>
-                  <View
-                    style={[
-                      styles.menuIconContainer,
-                      { backgroundColor: '#E74C3C' },
-                    ]}
-                  >
-                    <FontAwesome name="user-times" size={16} color="#fff" />
-                  </View>
-                  <Text style={styles.menuItemText}>Disable Account</Text>
-                </View>
-                <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.menuItem} onPress={confirmLogout}>
-                <View style={styles.menuItemLeft}>
-                  <View
-                    style={[
-                      styles.menuIconContainer,
-                      { backgroundColor: '#E74C3C' },
-                    ]}
-                  >
-                    <FontAwesome name="sign-out" size={16} color="#fff" />
-                  </View>
-                  <Text style={styles.menuItemText}>Logout</Text>
-                </View>
-                <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
+                <FontAwesome name="user-times" size={20} color="#fff" />
+                <Text style={styles.actionButtonText}>Disable Account</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-      </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+
       <NavBar />
     </View>
   );
@@ -471,46 +476,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f7',
   },
-  mainContent: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 100,
-  },
-  contentContainer: {
-    padding: 20,
-  },
   heroSection: {
-    height: 200,
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 20,
+    paddingBottom: 30,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
     elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
   headerContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
+    marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   headerSubtitle: {
     fontSize: 16,
     color: '#fff',
     opacity: 0.9,
   },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  contentContainer: {
+    padding: 20,
+    paddingBottom: 100,
+  },
   profileCard: {
+    alignItems: 'center',
     backgroundColor: '#053559',
     borderRadius: 20,
     padding: 20,
@@ -522,22 +529,13 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   profilePhotoContainer: {
-    alignItems: 'center',
     marginBottom: 15,
   },
-  profileInfo: {
-    alignItems: 'center',
-  },
   profileName: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 5,
-  },
-  profileEmail: {
-    fontSize: 16,
-    color: '#fff',
-    opacity: 0.9,
   },
   settingsCard: {
     backgroundColor: '#fff',
@@ -556,30 +554,36 @@ const styles = StyleSheet.create({
     color: '#053559',
     marginBottom: 15,
   },
+  infoContainer: {
+    gap: 12,
+  },
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  infoLabel: {
-    fontSize: 16,
-    color: '#666',
+  infoIcon: {
+    marginRight: 10,
+    width: 20,
   },
-  infoValue: {
+  infoText: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#333',
+  },
+  loadingText: {
+    color: '#666',
+    fontSize: 16,
+    textAlign: 'center',
   },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#053559',
-    borderRadius: 20,
     padding: 15,
+    borderRadius: 10,
     marginBottom: 20,
   },
   editButtonText: {
@@ -588,84 +592,112 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
-  menuItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+  inputContainer: {
+    marginBottom: 15,
   },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  menuItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  updateSection: {
-    marginBottom: 20,
+  inputLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
   },
   input: {
-    height: 40,
-    borderColor: '#ccc',
+    height: 45,
+    borderColor: '#ddd',
     borderWidth: 1,
-    paddingHorizontal: 10,
-    marginVertical: 10,
     borderRadius: 8,
+    paddingHorizontal: 15,
+    fontSize: 16,
   },
-  button: {
+  dateInput: {
+    height: 45,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    justifyContent: 'center',
+  },
+  datePickerContainer: {
+    marginTop: 10,
+  },
+  saveDateButton: {
+    backgroundColor: '#053559',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  saveDateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  genderContainer: {
+    marginTop: 20,
+  },
+  genderLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+  },
+  genderOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  genderButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#f5f5f5',
+    marginHorizontal: 5,
+  },
+  genderButtonSelected: {
+    backgroundColor: '#053559',
+    borderColor: '#053559',
+  },
+  genderText: {
+    color: '#333',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  genderTextSelected: {
+    color: '#fff',
+  },
+  updateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#053559',
     padding: 15,
     borderRadius: 10,
-    marginVertical: 8,
+    marginTop: 20,
   },
-  buttonText: {
+  updateButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 10,
   },
-  genderContainer: {
-    marginTop: 10,
+  actionsContainer: {
+    gap: 10,
   },
-  genderOptions: {
+  actionButton: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#053559',
+    padding: 15,
+    borderRadius: 10,
   },
-  genderButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#f5f5f5',
+  disableButton: {
+    backgroundColor: '#dc3545',
   },
-  genderButtonSelected: {
-    backgroundColor: 'white',
-    borderColor: '#053559',
-  },
-  genderText: {
-    color: '#000',
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
-  },
-  genderTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#053559',
-    marginBottom: 15,
+    marginLeft: 10,
   },
 });

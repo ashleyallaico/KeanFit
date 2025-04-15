@@ -10,6 +10,7 @@ import {
   StatusBar,
   Platform,
   ImageBackground,
+  Alert,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
@@ -20,7 +21,6 @@ import { fetchUserProfile } from '../services/userService';
 import { CATEGORIES } from '../constants/categories';
 
 const SettingsScreen = () => {
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const navigation = useNavigation();
   const [profile, setProfile] = useState(null);
@@ -32,12 +32,27 @@ const SettingsScreen = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleDarkModeToggle = () => {
-    setDarkModeEnabled((prevState) => !prevState);
-  };
-
   const handleNotificationsToggle = () => {
     setNotificationsEnabled((prevState) => !prevState);
+  };
+
+  const confirmLogout = () => {
+    Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', onPress: handleLogout },
+    ]);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      Alert.alert('Logout Failed', error.message);
+    }
   };
 
   const SettingItem = ({ icon, title, children }) => (
@@ -52,7 +67,6 @@ const SettingsScreen = () => {
     </View>
   );
 
-  // Use this to determine which option is the header
   useEffect(() => {
     navigation.setOptions({
       headerShown: false,
@@ -67,7 +81,6 @@ const SettingsScreen = () => {
         translucent={true}
       />
 
-      {/* Hero Section with Background */}
       <ImageBackground
         source={require('../assets/KeanBG.png')}
         style={styles.heroSection}
@@ -159,54 +172,13 @@ const SettingsScreen = () => {
                 style={styles.switch}
               />
             </SettingItem>
-            <SettingItem icon="moon-o" title="Dark Mode">
-              <Switch
-                trackColor={{ false: '#D1D1D6', true: '#053559' }}
-                thumbColor={darkModeEnabled ? '#fff' : '#fff'}
-                ios_backgroundColor="#D1D1D6"
-                onValueChange={handleDarkModeToggle}
-                value={darkModeEnabled}
-                style={styles.switch}
-              />
-            </SettingItem>
-          </View>
-
-          {/* Support Section */}
-          <View style={styles.settingsCard}>
-            <Text style={styles.sectionTitle}>Support</Text>
-            <TouchableOpacity style={styles.menuItem}>
-              <View style={styles.menuItemLeft}>
-                <View
-                  style={[
-                    styles.menuIconContainer,
-                    { backgroundColor: '#27AE60' },
-                  ]}
-                >
-                  <FontAwesome name="info-circle" size={16} color="#fff" />
-                </View>
-                <Text style={styles.menuItemText}>Help & Support</Text>
-              </View>
-              <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.menuItem}>
-              <View style={styles.menuItemLeft}>
-                <View
-                  style={[
-                    styles.menuIconContainer,
-                    { backgroundColor: '#8E44AD' },
-                  ]}
-                >
-                  <FontAwesome name="file-text-o" size={16} color="#fff" />
-                </View>
-                <Text style={styles.menuItemText}>Terms & Privacy</Text>
-              </View>
-              <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
-            </TouchableOpacity>
           </View>
 
           {/* Sign Out Button */}
-          <TouchableOpacity style={styles.signOutButton}>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={confirmLogout}
+          >
             <FontAwesome name="sign-out" size={18} color="#E74C3C" />
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>

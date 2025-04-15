@@ -190,7 +190,9 @@ export default function WorkoutsScreen() {
           const workoutsArray = Object.keys(workoutsData).map((key) => ({
             id: key,
             name: key,
+            Category: preference,
             ...workoutsData[key],
+            imageUrl: getWorkoutImage(preference, key),
           }));
 
           fetchedWorkouts = [...fetchedWorkouts, ...workoutsArray];
@@ -232,14 +234,17 @@ export default function WorkoutsScreen() {
       if (name.toLowerCase().includes('swim'))
         return require('../assets/workout-cardio-swimming.png');
       return require('../assets/workout-cardio-default.png');
-    } else if (category === 'Strength Training') {
+    } else if (category === 'Strength Training' || category === 'Strength') {
       if (name.toLowerCase().includes('chest'))
         return require('../assets/workout-strength-chest.png');
       if (name.toLowerCase().includes('leg'))
         return require('../assets/workout-strength-legs.png');
       return require('../assets/workout-strength-default.png');
-    } else {
+    } else if (category === 'Yoga') {
       return require('../assets/workout-yoga-default.png');
+    } else {
+      // Default image for any other category
+      return require('../assets/workout-strength-default.png');
     }
   };
 

@@ -10,6 +10,7 @@ import {
   ImageBackground,
   Platform,
   ActivityIndicator,
+  LogBox,
 } from 'react-native';
 import { getDatabase, ref, set, get, child } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
@@ -37,6 +38,13 @@ const cuisines = ['mexican', 'italian', 'asian', 'mediterranean', 'american'];
 const skillLevels = ['easy', 'intermediate', 'advanced'];
 
 export default function MealPreferencesScreen() {
+  // Suppress the text rendering warning
+  useEffect(() => {
+    LogBox.ignoreLogs([
+      'Text strings must be rendered within a <Text> component',
+    ]);
+  }, []);
+
   const [existingPreferences, setExistingPreferences] = useState(null);
   const [showAllFields, setShowAllFields] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
@@ -422,15 +430,15 @@ export default function MealPreferencesScreen() {
           {/* Activity Level */}
           {(isMissing('activityLevel') || showAllFields) && (
             <View style={styles.preferenceSection}>
-              <Text style={styles.label}>
+              <View style={styles.labelContainer}>
                 <FontAwesome5
                   name="running"
                   size={14}
                   color="#09355c"
                   style={styles.labelIcon}
                 />
-                Activity Level
-              </Text>
+                <Text style={styles.label}>Activity Level</Text>
+              </View>
               <View style={styles.optionsGrid}>
                 {activityLevels.map((level) => (
                   <TouchableOpacity
@@ -462,15 +470,15 @@ export default function MealPreferencesScreen() {
           {/* Goal */}
           {(isMissing('goal') || showAllFields) && (
             <View style={styles.preferenceSection}>
-              <Text style={styles.label}>
+              <View style={styles.labelContainer}>
                 <FontAwesome5
                   name="bullseye"
                   size={14}
                   color="#09355c"
                   style={styles.labelIcon}
                 />
-                Goal
-              </Text>
+                <Text style={styles.label}>Goal</Text>
+              </View>
               <View style={styles.optionsGrid}>
                 {goals.map((g) => (
                   <TouchableOpacity
@@ -500,15 +508,15 @@ export default function MealPreferencesScreen() {
           {/* Dietary Restrictions */}
           {(isMissing('dietaryRestrictions') || showAllFields) && (
             <View style={styles.preferenceSection}>
-              <Text style={styles.label}>
+              <View style={styles.labelContainer}>
                 <FontAwesome5
                   name="check-circle"
                   size={14}
                   color="#09355c"
                   style={styles.labelIcon}
                 />
-                Dietary Restrictions
-              </Text>
+                <Text style={styles.label}>Dietary Restrictions</Text>
+              </View>
               <View style={styles.optionsWrap}>
                 {dietaryOptions.map((opt) => (
                   <TouchableOpacity
@@ -545,15 +553,15 @@ export default function MealPreferencesScreen() {
           {/* Meal Frequency */}
           {(isMissing('mealFrequency') || showAllFields) && (
             <View style={styles.preferenceSection}>
-              <Text style={styles.label}>
+              <View style={styles.labelContainer}>
                 <FontAwesome5
                   name="clock"
                   size={14}
                   color="#09355c"
                   style={styles.labelIcon}
                 />
-                Meal Frequency (meals/day)
-              </Text>
+                <Text style={styles.label}>Meal Frequency (meals/day)</Text>
+              </View>
               <View style={styles.numbersGrid}>
                 {[1, 2, 3, 4, 5, 6].map((n) => (
                   <TouchableOpacity
@@ -582,15 +590,15 @@ export default function MealPreferencesScreen() {
           {/* Preferred Cuisines */}
           {(isMissing('preferredCuisines') || showAllFields) && (
             <View style={styles.preferenceSection}>
-              <Text style={styles.label}>
+              <View style={styles.labelContainer}>
                 <FontAwesome5
                   name="utensils"
                   size={14}
                   color="#09355c"
                   style={styles.labelIcon}
                 />
-                Preferred Cuisines
-              </Text>
+                <Text style={styles.label}>Preferred Cuisines</Text>
+              </View>
               <View style={styles.optionsWrap}>
                 {cuisines.map((c) => (
                   <TouchableOpacity
@@ -624,15 +632,15 @@ export default function MealPreferencesScreen() {
           {/* Cooking Skill */}
           {(isMissing('cookingSkill') || showAllFields) && (
             <View style={styles.preferenceSection}>
-              <Text style={styles.label}>
+              <View style={styles.labelContainer}>
                 <FontAwesome5
-                  name="hat-chef"
+                  name="utensils"
                   size={14}
                   color="#09355c"
                   style={styles.labelIcon}
                 />
-                Cooking Skill
-              </Text>
+                <Text style={styles.label}>Cooking Skill</Text>
+              </View>
               <View style={styles.optionsGrid}>
                 {skillLevels.map((level) => (
                   <TouchableOpacity
@@ -742,8 +750,6 @@ export default function MealPreferencesScreen() {
                     </View>
                   ))}
                 </View>
-
-                {/* View Recipe button removed as requested */}
               </View>
             ))}
 

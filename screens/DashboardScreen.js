@@ -17,6 +17,8 @@ import { useNavigation } from '@react-navigation/native';
 import NavBar from '../components/NavBar';
 import { auth } from '../services/firebaseConfig';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import { setupActivityListener } from '../services/fetchUserActivities';
 
 const { width } = Dimensions.get('window');
 
@@ -26,40 +28,106 @@ export default function DashboardScreen() {
   const [todayWorkout, setTodayWorkout] = useState(null);
   const [goals, setGoals] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
-  const [stepData, setStepData] = useState({ today: 0, goal: 0 });
+  const [stepData, setStepData] = useState({
+    today: 0,
+    goal: 10000,
+    distance: '0 m',
+    calories: 0,
+    duration: 0,
+  });
   const [greeting, setGreeting] = useState('');
 
+  // Setup activity listener from UserStats
   useEffect(() => {
-    const fetchStepGoal = () => {
+    const unsubscribe = setupActivityListener((data) => {
+      console.log('Received activities data:', data);
+
+      if (data && data.Cardio) {
+        let totalSteps = 0;
+        let totalDuration = 0;
+        const today = new Date();
+        const todayStart = new Date(today.setHours(0, 0, 0, 0)).getTime();
+        const todayEnd = new Date(today.setHours(23, 59, 59, 999)).getTime();
+
+        console.log('Today timestamp range:', todayStart, 'to', todayEnd);
+
+        Object.entries(data.Cardio).forEach(([entryId, entryDetails]) => {
+          console.log('Processing entry:', entryId, entryDetails);
+
+          if (
+            entryDetails &&
+            entryDetails.date >= todayStart &&
+            entryDetails.date <= todayEnd
+          ) {
+            totalSteps += Number(entryDetails.steps) || 0;
+            totalDuration += Number(entryDetails.cardioDuration) || 0;
+          }
+        });
+
+        console.log('Total steps:', totalSteps);
+        console.log('Total duration:', totalDuration);
+
+        setStepData((prevState) => ({
+          ...prevState,
+          today: totalSteps,
+          duration: totalDuration,
+          distance: calculateDistance(totalSteps),
+          calories: calculateCalories(totalSteps, totalDuration),
+        }));
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Listen to changes in the weekly step goal from Firebase
+  useEffect(() => {
+    const fetchWeeklyStepGoal = () => {
       const db = getDatabase();
       const user = auth.currentUser;
-
       if (user) {
         const weeklyStepGoalRef = ref(
           db,
           `Users/${user.uid}/Goals/weeklySteps`
         );
-
         onValue(weeklyStepGoalRef, (snapshot) => {
           if (snapshot.exists()) {
-            const goalValue = Number(snapshot.val());
+            const value = snapshot.val();
             setStepData((prevState) => ({
               ...prevState,
-              goal: goalValue,
-            }));
-          } else {
-            // If no goal is set in Firebase, use the default value of 10000
-            setStepData((prevState) => ({
-              ...prevState,
-              goal: 10000,
+              goal: Number(value),
             }));
           }
         });
       }
     };
-
-    fetchStepGoal();
+    fetchWeeklyStepGoal();
   }, []);
+
+  // Calculate distance from steps
+  const calculateDistance = (steps) => {
+    const stepLength = 0.76; // Approximate step length in meters
+    const distanceInMeters = steps * stepLength;
+
+    if (distanceInMeters >= 1000) {
+      return (distanceInMeters / 1000).toFixed(2) + ' km';
+    }
+    return distanceInMeters.toFixed(2) + ' m';
+  };
+
+  // Calculate calories burned
+  const calculateCalories = (steps, duration) => {
+    const caloriesPerMinute = 4;
+    const minutes = duration / 60;
+    return Math.round(caloriesPerMinute * minutes);
+  };
+
+  // Format time from seconds to mm:ss
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     // IMPORTANT: Hide the header to remove "Dashboard" text
@@ -129,22 +197,6 @@ export default function DashboardScreen() {
         }
       }
     });
-
-    // Fetch step data (simplified mock)
-    // In a real app, you would fetch actual step tracking data
-    const stepRef = ref(db, `Users/${user.uid}/StepTracking`);
-    onValue(stepRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const stepDataFromDB = snapshot.val();
-        const latestDay = Object.keys(stepDataFromDB).sort().pop();
-        if (latestDay && stepDataFromDB[latestDay]) {
-          setStepData({
-            today: stepDataFromDB[latestDay].steps || 0,
-            goal: 10000, // Default goal
-          });
-        }
-      }
-    });
   };
 
   // Calculate step progress percentage
@@ -211,6 +263,13 @@ export default function DashboardScreen() {
       navigateTo: 'MealPreferences',
       color: '#053559',
     },
+    {
+      title: 'Log Calories',
+      icon: 'calculator',
+      iconFamily: 'FontAwesome',
+      navigateTo: 'LogCalories',
+      color: '#053559',
+    },
   ];
 
   return (
@@ -260,7 +319,7 @@ export default function DashboardScreen() {
       >
         {/* Dashboard Content */}
         <View style={styles.dashboardContent}>
-          {/* Step Tracking Progress */}
+          {/* Step Tracking Progress - Preview Style */}
           <View style={styles.stepProgressCard}>
             <View style={styles.stepProgressHeader}>
               <View>
@@ -280,6 +339,29 @@ export default function DashboardScreen() {
                 ]}
               />
             </View>
+
+            {/* Quick Metrics */}
+            <View style={styles.stepMetricsContainer}>
+              <View style={styles.stepMetric}>
+                <FontAwesome5 name="shoe-prints" size={14} color="#053559" />
+                <Text style={styles.stepMetricValue}>{stepData.distance}</Text>
+              </View>
+
+              <View style={styles.stepMetric}>
+                <FontAwesome5 name="clock" size={14} color="#053559" />
+                <Text style={styles.stepMetricValue}>
+                  {formatTime(stepData.duration)}
+                </Text>
+              </View>
+
+              <View style={styles.stepMetric}>
+                <FontAwesome5 name="fire" size={14} color="#053559" />
+                <Text style={styles.stepMetricValue}>
+                  {stepData.calories} cal
+                </Text>
+              </View>
+            </View>
+
             <TouchableOpacity
               style={styles.stepTrackingButton}
               onPress={() => navigation.navigate('StepTracking')}
@@ -336,7 +418,16 @@ export default function DashboardScreen() {
                     </View>
                   </View>
                   <View style={styles.startButtonContainer}>
-                    <TouchableOpacity style={styles.startButton}>
+                    <TouchableOpacity
+                      style={styles.startButton}
+                      onPress={() =>
+                        navigation.navigate('TrackWorkout', {
+                          workout: todayWorkout,
+                          category: todayWorkout.Category,
+                          subCategory: todayWorkout.name,
+                        })
+                      }
+                    >
                       <Text style={styles.startButtonText}>Start</Text>
                     </TouchableOpacity>
                   </View>
@@ -600,14 +691,14 @@ const styles = StyleSheet.create({
   },
   stepProgressCard: {
     backgroundColor: '#fff',
-    borderRadius: 18,
+    borderRadius: 15,
     padding: 20,
-    marginBottom: 25,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   stepProgressHeader: {
     flexDirection: 'row',
@@ -616,39 +707,58 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   stepProgressTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#333',
-    marginBottom: 5,
   },
   stepCount: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#053559',
   },
   progressBarContainer: {
-    height: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 4,
+    height: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
     marginBottom: 15,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
     backgroundColor: '#053559',
-    borderRadius: 4,
+    borderRadius: 5,
+  },
+  stepMetricsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+    paddingTop: 5,
+    paddingBottom: 5,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  stepMetric: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  stepMetricValue: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
   },
   stepTrackingButton: {
-    alignSelf: 'flex-end',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 15,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#053559',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   stepTrackingButtonText: {
-    fontSize: 14,
-    color: '#053559',
-    fontWeight: '600',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   todayWorkoutContainer: {
     marginBottom: 25,

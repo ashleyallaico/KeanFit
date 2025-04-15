@@ -16,6 +16,7 @@ import NavBar from '../components/NavBar';
 import { setupActivityListener } from '../services/fetchUserActivities';
 import { getDatabase, ref, set, onValue } from 'firebase/database';
 import { auth } from '../services/firebaseConfig';
+import { useNavigation } from '@react-navigation/native';
 
 const StepTrackingScreen = ({ route }) => {
   // State variables
@@ -26,6 +27,7 @@ const StepTrackingScreen = ({ route }) => {
   const [stepGoal, setStepGoal] = useState(10000); // Default goal
   const [newWeeklyStepGoal, setNewWeeklyStepGoal] = useState('');
   const [activities, setActivities] = useState({});
+  const navigation = useNavigation();
 
   // Get current date in readable format
   const formattedDate = date.toLocaleDateString('en-US', {
@@ -34,11 +36,48 @@ const StepTrackingScreen = ({ route }) => {
     month: 'long',
     day: 'numeric',
   });
-  const todayDate = date.toLocaleDateString();
+  const todayDate = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
   // Setup activity listener from UserStats
   useEffect(() => {
-    const unsubscribe = setupActivityListener(setActivities);
+    const unsubscribe = setupActivityListener((data) => {
+      console.log('Received activities data:', data);
+
+      if (data && data.Cardio) {
+        let totalSteps = 0;
+        let totalDuration = 0;
+        const today = new Date();
+        const todayTimestamp = today.getTime();
+        const todayStart = new Date(today.setHours(0, 0, 0, 0)).getTime();
+        const todayEnd = new Date(today.setHours(23, 59, 59, 999)).getTime();
+
+        console.log('Today timestamp range:', todayStart, 'to', todayEnd);
+
+        Object.entries(data.Cardio).forEach(([entryId, entryDetails]) => {
+          console.log('Processing entry:', entryId, entryDetails);
+
+          if (
+            entryDetails &&
+            entryDetails.date >= todayStart &&
+            entryDetails.date <= todayEnd
+          ) {
+            totalSteps += Number(entryDetails.steps) || 0;
+            totalDuration += Number(entryDetails.cardioDuration) || 0;
+          }
+        });
+
+        console.log('Total steps:', totalSteps);
+        console.log('Total duration:', totalDuration);
+
+        setDailySteps(totalSteps);
+        setDailyDuration(totalDuration);
+        setActivities(data); // Store the activities data
+
+        // Update weekly data with the new totals
+        updateWeeklyData(totalSteps, totalDuration);
+      }
+    });
+
     return () => unsubscribe();
   }, []);
 
@@ -63,47 +102,16 @@ const StepTrackingScreen = ({ route }) => {
     fetchWeeklyStepGoal();
   }, []);
 
-  // Process activities when they change
-  useEffect(() => {
-    processActivities();
-  }, [activities]);
-
-  // Update with steps from CardioComponent if available
-  useEffect(() => {
-    if (route.params?.steps && route.params?.duration) {
-      updateDailyStats(route.params.steps, route.params.duration);
-    }
-  }, [route.params]);
-
   // Load saved data on component mount
   useEffect(() => {
     loadData();
   }, []);
 
-  // Process activities from UserStats
-  const processActivities = () => {
-    if (!activities || Object.keys(activities).length === 0) return;
-
-    let totalSteps = 0;
-    let totalDuration = 0;
-
-    // Get today's cardio activities
-    if (activities.Cardio) {
-      Object.entries(activities.Cardio).forEach(([entryId, entryDetails]) => {
-        if (entryDetails.date === todayDate) {
-          totalSteps += Number(entryDetails.steps) || 0;
-          totalDuration += Number(entryDetails.cardioDuration) || 0;
-        }
-      });
-    }
-
-    // Update state with the latest data from activities
-    setDailySteps(totalSteps);
-    setDailyDuration(totalDuration);
-
-    // Update weekly data with today's steps
-    updateWeeklyData(totalSteps, totalDuration);
-  };
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
 
   // Load step data from storage
   const loadData = async () => {
@@ -111,10 +119,23 @@ const StepTrackingScreen = ({ route }) => {
       // Load weekly data
       const weeklyDataString = await AsyncStorage.getItem('weekly_stats');
       if (weeklyDataString) {
-        setWeeklyData(JSON.parse(weeklyDataString));
+        const parsedData = JSON.parse(weeklyDataString);
+        console.log('Loaded weekly data:', parsedData);
+
+        // Ensure the "today" marker is correctly set
+        const today = new Date().getDay();
+        const updatedData = parsedData.map((day, index) => ({
+          ...day,
+          day:
+            day.day || ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index], // Ensure day label exists
+          isToday: index === today,
+        }));
+
+        console.log('Updated weekly data with day labels:', updatedData);
+        setWeeklyData(updatedData);
       } else {
         // Initialize weekly data if none exists
-        initializeWeeklyData();
+        await initializeWeeklyData();
       }
 
       // Load step goal from AsyncStorage as a fallback
@@ -139,23 +160,30 @@ const StepTrackingScreen = ({ route }) => {
       'Saturday',
     ];
     const today = new Date().getDay();
+    console.log('Today day index for initialization:', today);
 
     const newWeeklyData = days.map((day, index) => ({
-      day: day.substring(0, 3),
+      day: day.substring(0, 3), // First 3 letters of each day
       steps: 0,
       duration: 0,
       isToday: index === today,
     }));
 
+    console.log('Initialized weekly data:', newWeeklyData);
     setWeeklyData(newWeeklyData);
     await AsyncStorage.setItem('weekly_stats', JSON.stringify(newWeeklyData));
   };
 
   // Update weekly data based on processed activities
   const updateWeeklyData = async (steps, duration) => {
-    if (!weeklyData || weeklyData.length === 0) return;
+    if (!weeklyData || weeklyData.length === 0) {
+      console.log('Weekly data not initialized yet, initializing first');
+      await initializeWeeklyData();
+      return;
+    }
 
     const todayIndex = new Date().getDay();
+    console.log('Updating weekly data for day index:', todayIndex);
 
     // Update weekly data
     const updatedWeeklyData = [...weeklyData];
@@ -163,8 +191,10 @@ const StepTrackingScreen = ({ route }) => {
       ...updatedWeeklyData[todayIndex],
       steps: steps,
       duration: duration,
+      isToday: true,
     };
 
+    console.log('Updated weekly data:', updatedWeeklyData);
     setWeeklyData(updatedWeeklyData);
     await AsyncStorage.setItem(
       'weekly_stats',
@@ -280,7 +310,7 @@ const StepTrackingScreen = ({ route }) => {
             rotation={210}
             arcSweepAngle={300}
           >
-            {() => (
+            {(fill) => (
               <View style={styles.circleContent}>
                 <Text style={styles.stepsNumber}>{dailySteps}</Text>
                 <Text style={styles.stepsLabel}>Steps</Text>
@@ -354,6 +384,7 @@ const StepTrackingScreen = ({ route }) => {
                 </View>
                 <Text
                   style={[styles.dayLabel, day.isToday && styles.todayLabel]}
+                  numberOfLines={1}
                 >
                   {day.day}
                 </Text>
@@ -397,6 +428,7 @@ const styles = StyleSheet.create({
   dateContainer: {
     backgroundColor: '#09355c',
     padding: 20,
+    marginTop: 50,
     paddingTop: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
@@ -481,8 +513,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     height: 120,
     marginTop: 10,
+    paddingHorizontal: 5,
   },
-  dayBar: { alignItems: 'center', width: '13%' },
+  dayBar: {
+    alignItems: 'center',
+    width: '13%',
+    marginHorizontal: 2,
+  },
   barContainer: {
     height: '85%',
     width: '100%',
@@ -491,9 +528,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
-  bar: { width: '100%', backgroundColor: '#4682B4', borderRadius: 10 },
-  dayLabel: { fontSize: 12, color: '#666', marginTop: 5 },
-  todayLabel: { fontWeight: 'bold', color: '#09355c' },
+  bar: {
+    width: '100%',
+    backgroundColor: '#4682B4',
+    borderRadius: 10,
+  },
+  dayLabel: {
+    fontSize: 14,
+    color: '#333',
+    marginTop: 8,
+    fontWeight: '500',
+    textAlign: 'center',
+    width: '100%',
+  },
+  todayLabel: {
+    fontWeight: 'bold',
+    color: '#09355c',
+  },
   activityContainer: {
     marginHorizontal: 15,
     marginTop: 15,

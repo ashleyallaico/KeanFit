@@ -196,7 +196,16 @@ const MyWorkoutScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.startButton}>
+        <TouchableOpacity
+          style={styles.startButton}
+          onPress={() =>
+            navigation.navigate('TrackWorkout', {
+              workout: item,
+              category: item.Category,
+              subCategory: item.name,
+            })
+          }
+        >
           <Text style={styles.startButtonText}>Start Workout</Text>
         </TouchableOpacity>
 
@@ -252,7 +261,10 @@ const MyWorkoutScreen = ({ navigation }) => {
             <FontAwesome name="chevron-left" size={18} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.screenTitle}>My Workouts</Text>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('Workouts')}
+          >
             <FontAwesome name="plus" size={18} color="#fff" />
           </TouchableOpacity>
         </View>

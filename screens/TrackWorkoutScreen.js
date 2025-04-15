@@ -19,11 +19,14 @@ import { auth } from '../services/firebaseConfig';
 import NavBar from '../components/NavBar';
 import { useNavigation } from '@react-navigation/native';
 
-const TrackWorkoutScreen = () => {
+const TrackWorkoutScreen = ({ route }) => {
   const navigation = useNavigation();
-  const [selectedCategory, setSelectedCategory] = useState('Select Workout');
-  const [selectedSubCategory, setSelectedSubCategory] =
-    useState('Select Option');
+  const [selectedCategory, setSelectedCategory] = useState(
+    route.params?.category || 'Select Workout'
+  );
+  const [selectedSubCategory, setSelectedSubCategory] = useState(
+    route.params?.subCategory || 'Select Option'
+  );
   const [isTrackingCardio, setIsTrackingCardio] = useState(false);
   const [steps, setSteps] = useState(0);
   const [cardioDuration, setCardioDuration] = useState(0);
@@ -71,6 +74,15 @@ const TrackWorkoutScreen = () => {
     Yoga: 'FontAwesome',
   };
 
+  // Pre-load workout details if they exist in route params
+  useEffect(() => {
+    if (route.params?.workout) {
+      const workout = route.params.workout;
+      setSelectedCategory(workout.Category || 'Select Workout');
+      setSelectedSubCategory(workout.name || 'Select Option');
+    }
+  }, [route.params]);
+
   const handleSubmit = () => {
     const db = getDatabase();
     const user = auth.currentUser;
@@ -78,44 +90,48 @@ const TrackWorkoutScreen = () => {
     if (user) {
       const uid = user.uid;
       const now = new Date();
-      const formattedDate = now.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
 
       let workoutData = {
         time: now.toLocaleTimeString(),
-        date: formattedDate,
-        timestamp: now.getTime(),
-        type: selectedCategory,
-        name: selectedSubCategory,
+        date: now.getTime(),
       };
 
       // Include subcategory along with category-specific data
       switch (selectedCategory) {
         case 'Cardio':
-          workoutData = { ...workoutData, steps, duration: cardioDuration };
+          workoutData = {
+            ...workoutData,
+            steps,
+            cardioDuration,
+            subCategory: selectedSubCategory,
+          };
           break;
         case 'Strength':
-          workoutData = { ...workoutData, reps, sets, weight };
+          workoutData = {
+            ...workoutData,
+            reps,
+            sets,
+            weight,
+            subCategory: selectedSubCategory,
+          };
           break;
         case 'Yoga':
-          workoutData = { ...workoutData, duration: yogaDuration };
+          workoutData = {
+            ...workoutData,
+            yogaDuration,
+            subCategory: selectedSubCategory,
+          };
           break;
       }
 
-      // Use consistent path with DashboardScreen (Activities instead of Activity)
-      const activityRef = ref(db, `Users/${uid}/Activities`);
+      // Change the database path to match the second code
+      const activityRef = ref(db, `Activity/${uid}/${selectedCategory}`);
       const newWorkoutRef = push(activityRef);
 
       set(newWorkoutRef, workoutData)
         .then(() => {
           console.log('Workout saved successfully!');
-
-          // Create a more elegant success message
-          alert('Great job! Your workout has been successfully saved.');
-
+          alert('Workout saved successfully!');
           // Reset state
           setSteps(0);
           setCardioDuration(0);

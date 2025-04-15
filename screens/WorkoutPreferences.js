@@ -17,12 +17,14 @@ import {
 } from '../services/userService';
 import { CATEGORIES } from '../constants/categories';
 import NavBar from '../components/NavBar';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState(null);
   const [selectedPreferences, setSelectedPreferences] = useState([]);
   const [initialPreferences, setInitialPreferences] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const unsubscribe = fetchUserProfile((profileData) => {
@@ -34,6 +36,12 @@ export default function ProfileScreen() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  });
 
   const handleSelectPreferences = (selectedItems) => {
     setSelectedPreferences(selectedItems);
