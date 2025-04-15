@@ -15,6 +15,7 @@ import StepTrackingScreen from '../screens/StepTrackingScreen';
 import MyStepsScreen from '../screens/MyStepsScreen';
 import UserStats from '../components/UserStats';
 import MealPreferencesScreen from '../screens/MealPreferencesScreen';
+import LogCaloriesScreen from '../screens/LogCalories';
 
 const Stack = createNativeStackNavigator();
 
@@ -103,6 +104,11 @@ const AppNavigator = () => {
         name="MealPreferences"
         component={MealPreferencesScreen}
         options={{ title: 'Meal Preferences', headerBackVisible: false }}
+      />
+      <Stack.Screen
+        name="LogCalories"
+        component={LogCaloriesScreen}
+        options={{ title: 'Calories Log', headerBackVisible: false }}
       />
     </Stack.Navigator>
   );
