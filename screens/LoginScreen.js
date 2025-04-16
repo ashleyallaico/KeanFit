@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
@@ -22,6 +23,18 @@ export default function LoginScreen() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigation = useNavigation();
 
+  // Animation value for fading in the login form
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    // Start the fade-in animation when component mounts
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredentials) => {
@@ -31,44 +44,43 @@ export default function LoginScreen() {
       .catch((error) => handleAuthError(error));
   };
 
-const checkAccountStatus = (uid) => {
-  const db = getDatabase();
-  const accountStatusRef = ref(db, `AccountDissable/${uid}`);
+  const checkAccountStatus = (uid) => {
+    const db = getDatabase();
+    const accountStatusRef = ref(db, `AccountDissable/${uid}`);
 
-  onValue(
-    accountStatusRef,
-    (snapshot) => {
-      if (snapshot.exists()) {
-        const isDisabled = snapshot.val();
-        if (!isDisabled) {
-          navigation.navigate('Dashboard');
-        } else {
-          Alert.alert(
-            'Reactivate Account',
-            'Your account is currently disabled. Do you want to reactivate your account?',
-            [
-              { text: 'Yes', onPress: () => reactivateAccount(uid) },
-              { text: 'No', style: 'cancel' },
-            ],
-            { cancelable: false }
-          );
-        }
-      } else {
-        // Node doesn't exist, create it and set to false
-        set(accountStatusRef, false)
-          .then(() => {
+    onValue(
+      accountStatusRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const isDisabled = snapshot.val();
+          if (!isDisabled) {
             navigation.navigate('Dashboard');
-          })
-          .catch((error) => {
-            Alert.alert('Error', 'Failed to initialize account status.');
-            console.error(error);
-          });
-      }
-    },
-    { onlyOnce: true }
-  );
-};
-
+          } else {
+            Alert.alert(
+              'Reactivate Account',
+              'Your account is currently disabled. Do you want to reactivate your account?',
+              [
+                { text: 'Yes', onPress: () => reactivateAccount(uid) },
+                { text: 'No', style: 'cancel' },
+              ],
+              { cancelable: false }
+            );
+          }
+        } else {
+          // Node doesn't exist, create it and set to false
+          set(accountStatusRef, false)
+            .then(() => {
+              navigation.navigate('Dashboard');
+            })
+            .catch((error) => {
+              Alert.alert('Error', 'Failed to initialize account status.');
+              console.error(error);
+            });
+        }
+      },
+      { onlyOnce: true }
+    );
+  };
 
   const reactivateAccount = (uid) => {
     const db = getDatabase();
@@ -103,7 +115,7 @@ const checkAccountStatus = (uid) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
+      <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
         {/* KEANFIT Logo */}
         <Image source={require('../assets/KEANFIT.png')} style={styles.logo} />
 
@@ -151,7 +163,7 @@ const checkAccountStatus = (uid) => {
             <Text style={styles.linkText}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
     </TouchableWithoutFeedback>
   );
 }
