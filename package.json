@@ -20,7 +20,7 @@
     "expo": "~52.0.30",
     "expo-dev-client": "~5.0.20",
     "expo-device": "~7.0.3",
-    "expo-linear-gradient": "^14.0.2",
+    "expo-linear-gradient": "~14.0.2",
     "expo-notifications": "~0.29.14",
     "expo-sensors": "~14.0.2",
     "expo-status-bar": "~2.0.1",
@@ -39,8 +39,6 @@
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "~4.4.0",
     "react-native-svg": "^15.11.2",
-    "expo-notifications": "~0.29.14",
-    "expo-device": "~7.0.3",
     "expo-constants": "~17.0.8"
   },
   "devDependencies": {
