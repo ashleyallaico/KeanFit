@@ -86,8 +86,10 @@ const SettingsScreen = () => {
         style={styles.heroSection}
         resizeMode="cover"
       >
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTitle}>Settings</Text>
+        <View style={styles.headerOverlay}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.headerTitle}>Settings</Text>
+          </View>
           <Text style={styles.headerSubtitle}>Personalize your experience</Text>
         </View>
       </ImageBackground>
@@ -201,8 +203,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f7',
   },
   heroSection: {
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 20,
-    paddingBottom: 30,
+    height: Platform.OS === 'ios' ? 160 : 150,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
@@ -212,15 +213,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
   },
-  headerContainer: {
+  headerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(9, 53, 92, 0.65)',
     paddingHorizontal: 20,
-    paddingTop: 20,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
+    marginBottom: 8,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    textAlign: 'center',
+    marginTop: 15,
+    marginLeft: 140,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -229,6 +239,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     opacity: 0.9,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   scrollContainer: {
     flex: 1,

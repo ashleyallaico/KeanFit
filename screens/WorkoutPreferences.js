@@ -18,6 +18,7 @@ import {
 import { CATEGORIES } from '../constants/categories';
 import NavBar from '../components/NavBar';
 import { useNavigation } from '@react-navigation/native';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState(null);
@@ -78,8 +79,17 @@ export default function ProfileScreen() {
         style={styles.heroSection}
         resizeMode="cover"
       >
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTitle}>Workout Preferences</Text>
+        <View style={styles.headerOverlay}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <FontAwesome name="chevron-left" size={18} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Workout Preferences</Text>
+          </View>
           <Text style={styles.headerSubtitle}>
             Customize your fitness journey
           </Text>
@@ -146,7 +156,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f7',
   },
   heroSection: {
-    height: 200,
+    height: Platform.OS === 'ios' ? 160 : 150,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
@@ -156,20 +166,53 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
-  headerContainer: {
+  headerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(9, 53, 92, 0.65)',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 20,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
+    marginBottom: 8,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+    zIndex: 10,
+    top: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    flex: 1,
+    textAlign: 'center',
+    marginTop: 15,
+    marginRight: 38, // Balance the back button width
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   headerSubtitle: {
     fontSize: 16,
     color: '#fff',
     opacity: 0.9,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   mainContent: {
     flex: 1,
