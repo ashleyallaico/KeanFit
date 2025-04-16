@@ -435,9 +435,21 @@ const UserStats = ({ navigation }) => {
         style={styles.heroSection}
         resizeMode="cover"
       >
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTitle}>Activity History</Text>
-          <Text style={styles.headerSubtitle}>Track your fitness progress</Text>
+        <View style={styles.headerOverlay}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <FontAwesome name="chevron-left" size={18} color="#fff" />
+            </TouchableOpacity>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Activity History</Text>
+              <Text style={styles.headerSubtitle}>
+                Track your fitness progress
+              </Text>
+            </View>
+          </View>
         </View>
       </ImageBackground>
 
@@ -513,26 +525,46 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   heroSection: {
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 20,
-    paddingBottom: 30,
+    height: Platform.OS === 'ios' ? 150 : 140,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
-    elevation: 8,
+    elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  headerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(9, 53, 92, 0.65)',
+    justifyContent: 'center',
   },
   headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 40,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    marginBottom: 4,
+    marginTop: 40,
+    marginLeft: 50,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -541,6 +573,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     opacity: 0.9,
+    marginLeft: 40,
   },
   scrollContainer: {
     paddingHorizontal: 15,

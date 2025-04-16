@@ -71,7 +71,7 @@ const TrackWorkoutScreen = ({ route }) => {
   const iconLibrary = {
     Cardio: 'FontAwesome',
     Strength: 'FontAwesome5',
-    Yoga: 'FontAwesome',
+    Yoga: 'FontAwesome5',
   };
 
   // Pre-load workout details if they exist in route params
@@ -187,9 +187,21 @@ const TrackWorkoutScreen = ({ route }) => {
         style={styles.heroSection}
         resizeMode="cover"
       >
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTitle}>Track Workout</Text>
-          <Text style={styles.headerSubtitle}>Log your fitness activities</Text>
+        <View style={styles.headerOverlay}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <FontAwesome name="chevron-left" size={18} color="#fff" />
+            </TouchableOpacity>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Track Workout</Text>
+              <Text style={styles.headerSubtitle}>
+                Log your fitness activities
+              </Text>
+            </View>
+          </View>
         </View>
       </ImageBackground>
 
@@ -417,26 +429,47 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   heroSection: {
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 20,
-    paddingBottom: 30,
+    height: Platform.OS === 'ios' ? 180 : 170,
+    paddingTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
-    elevation: 8,
+    elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  headerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(9, 53, 92, 0.65)',
+    justifyContent: 'center',
   },
   headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: Platform.OS === 'ios' ? 25 : 5,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+    marginTop: -30,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    marginTop: -30,
+    marginLeft: 50,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -445,6 +478,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     opacity: 0.9,
+    marginLeft: 50,
   },
   scrollContainer: {
     flex: 1,
@@ -454,71 +488,84 @@ const styles = StyleSheet.create({
   },
   selectionCard: {
     backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 5,
   },
   trackingCard: {
     backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 5,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+    color: '#09355c',
+    marginBottom: 18,
   },
   selectionSection: {
-    marginBottom: 15,
+    marginBottom: 18,
   },
   selectionLabel: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
+    color: '#555',
+    marginBottom: 10,
   },
   selectionButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 10,
+    borderColor: '#e8e8e8',
+    borderRadius: 12,
     backgroundColor: '#f9f9f9',
-    padding: 15,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
   },
   selectionButtonText: {
     fontSize: 16,
     color: '#333',
+    fontWeight: '500',
   },
   selectionSummary: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#f0f8ff',
-    borderRadius: 10,
-    marginTop: 10,
+    padding: 18,
+    backgroundColor: 'rgba(9, 53, 92, 0.08)',
+    borderRadius: 15,
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(9, 53, 92, 0.12)',
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#053559',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#09355c',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   selectionTextContainer: {
     flex: 1,
@@ -526,44 +573,51 @@ const styles = StyleSheet.create({
   selectedCategory: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#053559',
+    color: '#09355c',
   },
   selectedSubcategory: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: '#555',
+    marginTop: 3,
   },
   formContainer: {
     marginBottom: 20,
   },
   mainSubmitButton: {
-    backgroundColor: '#053559',
-    borderRadius: 25,
-    padding: 15,
+    backgroundColor: '#09355c',
+    borderRadius: 15,
+    padding: 18,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 4,
   },
   submitButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: 'bold',
   },
   promptCard: {
     backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 30,
+    borderRadius: 20,
+    padding: 35,
     alignItems: 'center',
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 5,
   },
   promptText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 17,
+    color: '#555',
     textAlign: 'center',
-    marginTop: 15,
+    marginTop: 18,
+    lineHeight: 24,
   },
   bottomPadding: {
     height: 100,

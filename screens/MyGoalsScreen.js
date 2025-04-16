@@ -17,7 +17,11 @@ import {
   StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  FontAwesome5,
+  MaterialCommunityIcons,
+  FontAwesome,
+} from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
@@ -665,12 +669,20 @@ const MyGoalsScreen = () => {
           style={styles.heroSection}
           resizeMode="cover"
         >
-          <View style={styles.heroContent}>
-            <View style={styles.heroTextContainer}>
-              <Text style={styles.heroTitle}>My Goals</Text>
-              <Text style={styles.heroSubtitle}>
-                Track your fitness journey
-              </Text>
+          <View style={styles.headerOverlay}>
+            <View style={styles.headerContainer}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+              >
+                <FontAwesome name="chevron-left" size={18} color="#fff" />
+              </TouchableOpacity>
+              <View style={styles.heroTextContainer}>
+                <Text style={styles.heroTitle}>My Goals</Text>
+                <Text style={styles.heroSubtitle}>
+                  Track your fitness journey
+                </Text>
+              </View>
             </View>
           </View>
         </ImageBackground>
@@ -1099,37 +1111,58 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 100 : 80,
   },
   heroSection: {
-    height: Platform.OS === 'ios' ? 200 : 180,
-    marginBottom: 20,
+    height: Platform.OS === 'ios' ? 150 : 140,
     justifyContent: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  heroContent: {
+  headerOverlay: {
     flex: 1,
-    paddingHorizontal: 25,
-    paddingTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
+    backgroundColor: 'rgba(9, 53, 92, 0.65)',
     justifyContent: 'center',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 40,
+  },
   heroTextContainer: {
-    maxWidth: '60%',
+    flex: 1,
   },
   heroTitle: {
-    fontSize: Platform.OS === 'ios' ? 34 : 32,
+    fontSize: Platform.OS === 'ios' ? 26 : 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 8,
+    marginBottom: 4,
+    marginTop: 40,
+    marginLeft: 90,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
   heroSubtitle: {
-    fontSize: Platform.OS === 'ios' ? 17 : 16,
+    fontSize: Platform.OS === 'ios' ? 16 : 15,
     color: 'rgba(255,255,255,0.9)',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+    marginLeft: 55,
   },
   createGoalButton: {
     flexDirection: 'row',
