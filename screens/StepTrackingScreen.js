@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NavBar from '../components/NavBar';
@@ -280,6 +280,12 @@ const StepTrackingScreen = ({ route, navigation }) => {
       <ScrollView>
         {/* Date Header */}
         <View style={styles.dateContainer}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <FontAwesome name="chevron-left" size={18} color="#fff" />
+          </TouchableOpacity>
           <Text style={styles.dateText}>{formattedDate}</Text>
         </View>
 
@@ -428,6 +434,24 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     alignItems: 'center',
+    position: 'relative', // Added for positioning the back button
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    top: 70,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   dateText: {
     fontSize: 18,

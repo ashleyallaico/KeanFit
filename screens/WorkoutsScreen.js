@@ -893,19 +893,20 @@ const styles = StyleSheet.create({
   header: {
     width: '100%',
     overflow: 'hidden',
+    top: -60,
   },
   headerGradient: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 40,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
+    marginTop: 40,
   },
   headerSubtitle: {
     fontSize: 16,

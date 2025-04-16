@@ -42,6 +42,7 @@ export default function LogCaloriesScreen() {
   const [entries, setEntries] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const scrollY = new Animated.Value(0);
+  const [activeFilter, setActiveFilter] = useState('Today'); // Default filter
 
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 120],
@@ -171,9 +172,70 @@ export default function LogCaloriesScreen() {
       });
   };
 
+  const getFilteredEntries = () => {
+    const now = new Date();
+    const todayString = getTodayDateString();
+
+    // Calculate yesterday's date string
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayString = formatDateToString(yesterday);
+
+    // Calculate past week date
+    const pastWeek = new Date(now);
+    pastWeek.setDate(pastWeek.getDate() - 7);
+    const pastWeekString = formatDateToString(pastWeek);
+
+    // Calculate past month date
+    const pastMonth = new Date(now);
+    pastMonth.setDate(pastMonth.getDate() - 30);
+    const pastMonthString = formatDateToString(pastMonth);
+
+    switch (activeFilter) {
+      case 'Today':
+        return entries.filter((entry) => entry.date === todayString);
+      case 'Yesterday':
+        return entries.filter((entry) => entry.date === yesterdayString);
+      case 'Past 7 Days':
+        return entries.filter((entry) => {
+          // Convert YYYY-MM-DD to Date for comparison
+          const entrySplit = entry.date.split('-');
+          const entryDate = new Date(
+            parseInt(entrySplit[0]),
+            parseInt(entrySplit[1]) - 1, // Month is 0-indexed in JS
+            parseInt(entrySplit[2])
+          );
+          return entryDate >= pastWeek && entryDate <= now;
+        });
+      case 'Past 30 Days':
+        return entries.filter((entry) => {
+          // Convert YYYY-MM-DD to Date for comparison
+          const entrySplit = entry.date.split('-');
+          const entryDate = new Date(
+            parseInt(entrySplit[0]),
+            parseInt(entrySplit[1]) - 1, // Month is 0-indexed in JS
+            parseInt(entrySplit[2])
+          );
+          return entryDate >= pastMonth && entryDate <= now;
+        });
+      case 'All Time':
+      default:
+        return entries;
+    }
+  };
+
+  // Helper function to format date to YYYY-MM-DD string
+  const formatDateToString = (date) => {
+    const year = date.getFullYear();
+    const month = `0${date.getMonth() + 1}`.slice(-2); // months are 0-based
+    const day = `0${date.getDate()}`.slice(-2);
+    return `${year}-${month}-${day}`;
+  };
+
   const groupByDate = () => {
+    const filtered = getFilteredEntries();
     const grouped = {};
-    entries.forEach((entry) => {
+    filtered.forEach((entry) => {
       if (!grouped[entry.date]) grouped[entry.date] = [];
       grouped[entry.date].push(entry);
     });
@@ -262,6 +324,31 @@ export default function LogCaloriesScreen() {
   const renderHistory = () => (
     <View style={styles.historyCard}>
       <Text style={styles.sectionTitle}>History</Text>
+
+      <View style={styles.filterContainer}>
+        {['Today', 'Yesterday', 'Past 7 Days', 'Past 30 Days', 'All Time'].map(
+          (filter) => (
+            <TouchableOpacity
+              key={filter}
+              style={[
+                styles.filterButton,
+                activeFilter === filter && styles.activeFilterButton,
+              ]}
+              onPress={() => setActiveFilter(filter)}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  activeFilter === filter && styles.activeFilterText,
+                ]}
+              >
+                {filter}
+              </Text>
+            </TouchableOpacity>
+          )
+        )}
+      </View>
+
       {Object.entries(dailyGroups).length > 0 ? (
         Object.entries(dailyGroups).map(([date, dayEntries]) => {
           const total = dayEntries.reduce((sum, e) => sum + e.calories, 0);
@@ -274,7 +361,9 @@ export default function LogCaloriesScreen() {
           );
         })
       ) : (
-        <Text style={styles.emptyText}>No history available</Text>
+        <Text style={styles.emptyText}>
+          No history available for the selected period
+        </Text>
       )}
     </View>
   );
@@ -289,21 +378,33 @@ export default function LogCaloriesScreen() {
           resizeMode="cover"
         />
         <LinearGradient
-          colors={['transparent']}
+          colors={['rgba(5, 53, 89, 0.65)', 'rgba(5, 53, 89, 0.65)']}
           style={styles.headerGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
         >
-          <Animated.Text
-            style={[styles.headerTitle, { opacity: headerSubtitleOpacity }]}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
           >
-            Track Calories
-          </Animated.Text>
-          <Animated.Text
-            style={[styles.headerSubtitle, { opacity: headerSubtitleOpacity }]}
-          >
-            Monitor your daily intake
-          </Animated.Text>
+            <FontAwesome name="chevron-left" size={18} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Animated.Text
+              style={[styles.headerTitle, { opacity: headerSubtitleOpacity }]}
+            >
+              Track Calories
+            </Animated.Text>
+            <Animated.Text
+              style={[
+                styles.headerSubtitle,
+                { opacity: headerSubtitleOpacity },
+              ]}
+            >
+              Monitor your daily intake
+            </Animated.Text>
+          </View>
 
           <Animated.Text
             style={[styles.compactHeaderTitle, { opacity: headerTitleOpacity }]}
@@ -385,6 +486,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderBottomLeftRadius: 35,
     borderBottomRightRadius: 35,
+    zIndex: 10,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
   headerImage: {
     width: '100%',
@@ -397,14 +504,35 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingBottom: 25,
   },
+  headerTextContainer: {
+    marginTop: 15,
+  },
+  backButton: {
+    width: Platform.OS === 'ios' ? 44 : 40,
+    height: Platform.OS === 'ios' ? 44 : 40,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 80 : 20,
+    left: 20,
+    zIndex: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
   headerTitle: {
-    fontSize: Platform.OS === 'ios' ? 32 : 28,
+    fontSize: Platform.OS === 'ios' ? 28 : 28,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 8,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
+    marginLeft: 95,
   },
   headerSubtitle: {
     fontSize: Platform.OS === 'ios' ? 18 : 16,
@@ -413,6 +541,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+    marginLeft: 90,
   },
   compactHeaderTitle: {
     fontSize: Platform.OS === 'ios' ? 24 : 20,
@@ -583,5 +712,31 @@ const styles = StyleSheet.create({
     height: 20,
     backgroundColor: '#4CAF50',
     borderRadius: 10,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    marginBottom: 20,
+    gap: 8,
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+    marginBottom: 8,
+  },
+  activeFilterButton: {
+    backgroundColor: '#053559',
+  },
+  filterText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  activeFilterText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });

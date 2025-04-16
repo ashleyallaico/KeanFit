@@ -349,15 +349,19 @@ export default function MealPreferencesScreen() {
         style={styles.heroSection}
         resizeMode="cover"
       >
-        <View style={styles.headerContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <FontAwesome name="chevron-left" size={18} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.screenTitle}>Meal Preferences</Text>
-          <View style={{ width: 36 }}></View> {/* Empty view for spacing */}
+        <View style={styles.headerOverlay}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <FontAwesome name="chevron-left" size={18} color="#fff" />
+            </TouchableOpacity>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.screenTitle}>Meal Preferences</Text>
+            </View>
+          </View>
         </View>
       </ImageBackground>
 
@@ -820,8 +824,7 @@ const styles = StyleSheet.create({
     color: '#09355c',
   },
   heroSection: {
-    paddingTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
-    paddingBottom: 35,
+    height: Platform.OS === 'ios' ? 150 : 140,
     borderBottomLeftRadius: 35,
     borderBottomRightRadius: 35,
     marginBottom: 20,
@@ -834,17 +837,20 @@ const styles = StyleSheet.create({
     zIndex: 10,
     overflow: 'hidden',
   },
+  headerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(9, 53, 92, 0.65)',
+    justifyContent: 'center',
+  },
   headerContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Platform.OS === 'ios' ? 25 : 20,
-    marginBottom: 15,
   },
   backButton: {
-    width: Platform.OS === 'ios' ? 42 : 38,
-    height: Platform.OS === 'ios' ? 42 : 38,
-    borderRadius: 21,
+    width: Platform.OS === 'ios' ? 44 : 40,
+    height: Platform.OS === 'ios' ? 44 : 40,
+    borderRadius: 22,
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -853,6 +859,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
+    zIndex: 20,
+    marginTop: 40,
+  },
+  headerTextContainer: {
+    flex: 1,
+    alignItems: 'center',
   },
   screenTitle: {
     fontSize: Platform.OS === 'ios' ? 26 : 24,
@@ -862,11 +874,8 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
     letterSpacing: 0.5,
-    position: 'absolute',
-    bottom: 15,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
+    marginLeft: -30,
+    marginTop: 40,
   },
   container: {
     flexGrow: 1,
