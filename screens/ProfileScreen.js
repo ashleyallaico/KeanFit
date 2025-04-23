@@ -82,6 +82,15 @@ export default function ProfileScreen() {
     });
   });
 
+
+  const getBMICategory = (bmi) => {
+    if (!bmi || isNaN(bmi)) return ' N/A';
+    if (bmi < 18.5) return ' Underweight';
+    if (bmi < 25) return ' Normal';
+    if (bmi < 30) return ' Overweight';
+    return 'Severe Obesity';
+  };
+
   const disableAccount = () => {
     Alert.alert(
       'Disable Account',
@@ -252,7 +261,9 @@ export default function ProfileScreen() {
                     />
                     <Text style={styles.infoText}>
                       BMI:{' '}
-                      {calculateBMI(profile.Height, profile.Weight) ?? 'N/A'}
+                      {calculateBMI(profile.Height, profile.Weight)
+                      ?? 'N/A'}
+                      {getBMICategory(calculateBMI(profile.Height, profile.Weight)) ?? ''}
                     </Text>
                   </View>
                   <View style={styles.infoRow}>
