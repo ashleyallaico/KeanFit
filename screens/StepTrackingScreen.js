@@ -28,6 +28,7 @@ const StepTrackingScreen = ({ route, navigation }) => {
   const [newWeeklyStepGoal, setNewWeeklyStepGoal] = useState('');
   const [activities, setActivities] = useState({});
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [lastWeekStartDate, setLastWeekStartDate] = useState(null);
 
   // Get current date in readable format
   const formattedDate = date.toLocaleDateString('en-US', {
@@ -37,6 +38,16 @@ const StepTrackingScreen = ({ route, navigation }) => {
     day: 'numeric',
   });
   const todayDate = date.toLocaleDateString();
+
+  // Helper function to get the start of the current week (Sunday)
+  const getCurrentWeekStartDate = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 is Sunday, 1 is Monday, etc.
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - dayOfWeek); // Go back to Sunday
+    startOfWeek.setHours(0, 0, 0, 0); // Set to midnight
+    return startOfWeek.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  };
 
   // Load saved data on component mount
   useEffect(() => {
@@ -55,27 +66,48 @@ const StepTrackingScreen = ({ route, navigation }) => {
   const loadData = async () => {
     try {
       console.log('Loading data from AsyncStorage');
-      // Load weekly data
-      const weeklyDataString = await AsyncStorage.getItem('weekly_stats');
-      console.log('Loaded weekly data string:', weeklyDataString);
 
-      if (weeklyDataString) {
-        const parsedData = JSON.parse(weeklyDataString);
-        console.log('Parsed weekly data:', parsedData);
-        setWeeklyData(parsedData);
+      // Check if we need to reset the weekly data
+      const currentWeekStartDate = getCurrentWeekStartDate();
+      const storedWeekStartDate = await AsyncStorage.getItem('week_start_date');
 
-        // Get today's data from the weekly data
-        const today = new Date().getDay();
-        const todayData = parsedData.find((day, index) => index === today);
-        if (todayData) {
-          console.log('Found today data:', todayData);
-          setDailySteps(todayData.steps || 0);
-          setDailyDuration(todayData.duration || 0);
-        }
+      console.log('Current week start date:', currentWeekStartDate);
+      console.log('Stored week start date:', storedWeekStartDate);
+
+      // If week start date is different, we need to reset the weekly data
+      const needsReset =
+        !storedWeekStartDate || storedWeekStartDate !== currentWeekStartDate;
+
+      if (needsReset) {
+        console.log('New week detected, resetting weekly data');
+        await AsyncStorage.setItem('week_start_date', currentWeekStartDate);
+        await initializeWeeklyData(true); // true flag to force reset
+        setLastWeekStartDate(currentWeekStartDate);
       } else {
-        // Initialize weekly data if none exists
-        console.log('No weekly data found, initializing...');
-        initializeWeeklyData();
+        // Load weekly data
+        const weeklyDataString = await AsyncStorage.getItem('weekly_stats');
+        console.log('Loaded weekly data string:', weeklyDataString);
+
+        if (weeklyDataString) {
+          const parsedData = JSON.parse(weeklyDataString);
+          console.log('Parsed weekly data:', parsedData);
+          setWeeklyData(parsedData);
+
+          // Get today's data from the weekly data
+          const today = new Date().getDay();
+          const todayData = parsedData.find((day, index) => index === today);
+          if (todayData) {
+            console.log('Found today data:', todayData);
+            setDailySteps(todayData.steps || 0);
+            setDailyDuration(todayData.duration || 0);
+          }
+        } else {
+          // Initialize weekly data if none exists
+          console.log('No weekly data found, initializing...');
+          await initializeWeeklyData();
+        }
+
+        setLastWeekStartDate(storedWeekStartDate);
       }
 
       // Load step goal from AsyncStorage as a fallback
@@ -98,14 +130,14 @@ const StepTrackingScreen = ({ route, navigation }) => {
   }, [navigation]);
 
   // Initialize weekly data structure
-  const initializeWeeklyData = async () => {
+  const initializeWeeklyData = async (forceReset = false) => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const today = new Date().getDay();
 
     const newWeeklyData = days.map((day, index) => ({
       day,
-      steps: index === today ? dailySteps : 0,
-      duration: index === today ? dailyDuration : 0,
+      steps: index === today && !forceReset ? dailySteps : 0,
+      duration: index === today && !forceReset ? dailyDuration : 0,
       isToday: index === today,
     }));
 
@@ -123,6 +155,16 @@ const StepTrackingScreen = ({ route, navigation }) => {
   const updateWeeklyData = async (steps, duration) => {
     console.log('updateWeeklyData called with:', steps, duration);
     console.log('Current weeklyData:', weeklyData);
+
+    // Check if we need to reset weekly data (new week)
+    const currentWeekStartDate = getCurrentWeekStartDate();
+    if (lastWeekStartDate !== currentWeekStartDate) {
+      console.log('Week changed, resetting data');
+      await AsyncStorage.setItem('week_start_date', currentWeekStartDate);
+      setLastWeekStartDate(currentWeekStartDate);
+      await initializeWeeklyData(true);
+      return;
+    }
 
     if (!weeklyData || weeklyData.length === 0) {
       console.log('No weekly data, initializing...');

@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  FlatList,
+} from 'react-native';
 import { Pedometer } from 'expo-sensors';
 import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // For saving step count data
@@ -11,7 +18,7 @@ const MyStepsScreen = () => {
   const [isTracking, setIsTracking] = useState(false);
   const lastStepCount = useRef(0);
   const timerInterval = useRef(null);
-  const currentDate = useRef(new Date().toISOString().split('T')[0]); 
+  const currentDate = useRef(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     // Load previous step data from AsyncStorage on first render
@@ -50,7 +57,10 @@ const MyStepsScreen = () => {
   // Save daily step count to AsyncStorage
   useEffect(() => {
     const saveData = async () => {
-      const updatedSteps = { ...dailySteps, [currentDate.current]: currentSteps };
+      const updatedSteps = {
+        ...dailySteps,
+        [currentDate.current]: currentSteps,
+      };
       await AsyncStorage.setItem('dailySteps', JSON.stringify(updatedSteps));
     };
 
@@ -65,16 +75,19 @@ const MyStepsScreen = () => {
 
   const handleReset = () => {
     Alert.alert(
-      "Restart Workout",
-      "Are you sure you want to restart?",
+      'Restart Workout',
+      'Are you sure you want to restart?',
       [
-        { text: "Yes", onPress: () => {
-          setCurrentSteps(0);
-          setDuration(0);
-          setIsTracking(false);
-          lastStepCount.current = 0;
-        } },
-        { text: "No", style: "cancel" }
+        {
+          text: 'Yes',
+          onPress: () => {
+            setCurrentSteps(0);
+            setDuration(0);
+            setIsTracking(false);
+            lastStepCount.current = 0;
+          },
+        },
+        { text: 'No', style: 'cancel' },
       ],
       { cancelable: true }
     );
@@ -115,10 +128,23 @@ const MyStepsScreen = () => {
       <Text style={styles.timerText}>Time: {formatTime(duration)}</Text>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.button, { backgroundColor: isTracking ? "#FFA500" : "#4CAF50" }]} onPress={toggleTracking}>
-          <FontAwesome5 name={isTracking ? "pause" : "play"} size={20} color="#fff" />
+        <TouchableOpacity
+          style={[
+            styles.button,
+            { backgroundColor: isTracking ? '#FFA500' : '#4CAF50' },
+          ]}
+          onPress={toggleTracking}
+        >
+          <FontAwesome5
+            name={isTracking ? 'pause' : 'play'}
+            size={20}
+            color="#fff"
+          />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: "#FF6347" }]} onPress={handleReset}>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: '#FF6347' }]}
+          onPress={handleReset}
+        >
           <FontAwesome5 name="redo" size={20} color="#fff" />
         </TouchableOpacity>
       </View>

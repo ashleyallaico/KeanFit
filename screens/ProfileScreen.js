@@ -14,7 +14,6 @@ import {
   ImageBackground,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-// import { Platform } from 'react-native';
 import { fetchUserProfile } from '../services/userService';
 import { FontAwesome } from '@expo/vector-icons';
 import NavBar from '../components/NavBar';
@@ -82,6 +81,15 @@ export default function ProfileScreen() {
       headerShown: false,
     });
   });
+
+
+  const getBMICategory = (bmi) => {
+    if (!bmi || isNaN(bmi)) return ' N/A';
+    if (bmi < 18.5) return ' Underweight';
+    if (bmi < 25) return ' Normal';
+    if (bmi < 30) return ' Overweight';
+    return 'Severe Obesity';
+  };
 
   const disableAccount = () => {
     Alert.alert(
@@ -253,7 +261,9 @@ export default function ProfileScreen() {
                     />
                     <Text style={styles.infoText}>
                       BMI:{' '}
-                      {calculateBMI(profile.Height, profile.Weight) ?? 'N/A'}
+                      {calculateBMI(profile.Height, profile.Weight)
+                      ?? 'N/A'}
+                      {getBMICategory(calculateBMI(profile.Height, profile.Weight)) ?? ''}
                     </Text>
                   </View>
                   <View style={styles.infoRow}>
