@@ -18,7 +18,7 @@
       "bundleIdentifier": "com.kean.keanfitt",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["fetch", "remote-notification"]  
+        "UIBackgroundModes": ["fetch", "remote-notification"]  // Add this line
       }
     },
     "android": {
